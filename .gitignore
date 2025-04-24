@@ -1,0 +1,62 @@
+# Build
+bin/
+obj/
+out/
+
+# User-specific files
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+
+# VS Code
+.vscode/
+
+# Rider
+.idea/
+
+# Logs
+*.log
+
+# OS junk
+.DS_Store
+Thumbs.db
+
+# Configuration
+appsettings.Development.json
+appsettings.Local.json
+
+# Dotnet artifacts
+*.dbmdl
+*.pdb
+*.cache
+*.pidb
+*.mdb
+
+# EF Core Migrations snapshot (opcional)
+**/Migrations/*Snapshot.cs
+
+# Maui and Xamarin stuff
+*.apk
+*.aab
+*.apks
+*.ipa
+*.xcuserstate
+*.xcworkspace
+*.xcconfig
+*.xcuserdata
+*.xcodeproj
+*.nupkg
+
+# Test result
+TestResults/
+*.coverage
+*.coveragexml
+
+# Env
+.env
+.env.*
+
+# Others
+wwwroot/lib/
+node_modules/
