@@ -1,0 +1,12 @@
+{
+  "Version": 1,
+  "Hash": "Yf+XbaRBaf186HkzfigRLQ6oNrLf8Ir0w36B/UirJCU=",
+  "Source": "FuriaAPP.API",
+  "BasePath": "_content/FuriaAPP.API",
+  "Mode": "Default",
+  "ManifestType": "Build",
+  "ReferencedProjectsConfiguration": [],
+  "DiscoveryPatterns": [],
+  "Assets": [],
+  "Endpoints": []
+}

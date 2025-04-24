@@ -1,6 +1,6 @@
 {
   "version": 2,
-  "dgSpecHash": "s9bo83l8uvo=",
+  "dgSpecHash": "qzNdcnDZ6pE=",
   "success": true,
   "projectFilePath": "C:\\Users\\Gui\\Desktop\\Projects\\FuriaAPP\\FuriaAPP.API\\FuriaAPP.API.csproj",
   "expectedPackageFiles": [
@@ -26,6 +26,7 @@
     "C:\\Users\\Gui\\.nuget\\packages\\microsoft.entityframeworkcore.relational\\9.0.4\\microsoft.entityframeworkcore.relational.9.0.4.nupkg.sha512",
     "C:\\Users\\Gui\\.nuget\\packages\\microsoft.entityframeworkcore.sqlite\\9.0.4\\microsoft.entityframeworkcore.sqlite.9.0.4.nupkg.sha512",
     "C:\\Users\\Gui\\.nuget\\packages\\microsoft.entityframeworkcore.sqlite.core\\9.0.4\\microsoft.entityframeworkcore.sqlite.core.9.0.4.nupkg.sha512",
+    "C:\\Users\\Gui\\.nuget\\packages\\microsoft.entityframeworkcore.tools\\9.0.4\\microsoft.entityframeworkcore.tools.9.0.4.nupkg.sha512",
     "C:\\Users\\Gui\\.nuget\\packages\\microsoft.extensions.apidescription.server\\6.0.5\\microsoft.extensions.apidescription.server.6.0.5.nupkg.sha512",
     "C:\\Users\\Gui\\.nuget\\packages\\microsoft.extensions.caching.abstractions\\9.0.4\\microsoft.extensions.caching.abstractions.9.0.4.nupkg.sha512",
     "C:\\Users\\Gui\\.nuget\\packages\\microsoft.extensions.caching.memory\\9.0.4\\microsoft.extensions.caching.memory.9.0.4.nupkg.sha512",
