@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("FuriaAPP.API")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+7b68245009b49aa9136a0d4f7959f4e44c43e626")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+583e1625ef7f8633b54ef09b0a20dc2c05e2f52a")]
 [assembly: System.Reflection.AssemblyProductAttribute("FuriaAPP.API")]
 [assembly: System.Reflection.AssemblyTitleAttribute("FuriaAPP.API")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

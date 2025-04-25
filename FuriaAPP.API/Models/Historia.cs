@@ -5,6 +5,6 @@ namespace FuriaAPP.API.Models
         public int Id { get; set;}
         public string Titulo { get; set;} = string.Empty;
         public string Conteudo { get; set;} = string.Empty;
-        public DateTime Data { get; set;}
+        public DateTime DataPublicacao { get; set;}
     }
 }
