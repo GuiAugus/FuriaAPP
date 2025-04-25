@@ -59,11 +59,29 @@ namespace FuriaAPP.API.Controllers
         [HttpPost]
         public async Task<ActionResult<JogoHistoricoDto>> Create(JogoHistoricoDto dto)
         {
+            var adversario = await _context.Adversarios.FindAsync(dto.AdversarioId);
+            if (adversario == null)
+            {
+                return NotFound("Adversário não encontrado.");
+            }
+
+            var jogo = await _context.Jogos.FindAsync(dto.JogoId);
+            if (jogo == null)
+            {
+                return NotFound("Jogo não encontrado.");
+            }
+
+            var campeonato = await _context.Campeonatos.FindAsync(dto.CampeonatoId);
+            if (campeonato == null)
+            {
+                return NotFound("Campeonato não encontrado.");
+            }
+
             var novoJogoHistorico = new JogoHistorico
             {
-                Jogo = dto.Jogo,
+                Jogo = dto.Jogo,         
                 Adversario = dto.Adversario,
-                Campeonato = dto.Campeonato,
+                Campeonato = dto.Campeonato, 
                 DataJogo = dto.DataJogo
             };
 
@@ -83,6 +101,15 @@ namespace FuriaAPP.API.Controllers
             if (jogoHistorico == null)
             {
                 return NotFound();
+            }
+
+            var jogo = await _context.Jogos.FindAsync(dto.Id);
+            var adversario = await _context.Adversarios.FindAsync(dto.AdversarioId);
+            var campeonato = await _context.Campeonatos.FindAsync(dto.CampeonatoId);
+
+            if (jogo == null || adversario == null || campeonato == null)
+            {
+                return BadRequest ("Um ou mais IDs sao invalidos.");
             }
 
             jogoHistorico.Jogo = dto.Jogo;
