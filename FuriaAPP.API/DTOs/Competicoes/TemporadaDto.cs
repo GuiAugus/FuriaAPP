@@ -1,13 +1,11 @@
 namespace FuriaAPP.API.DTOs
 {
-    public class CampeonatoDto
+    public class TemporadaDto
     {
         public int Id { get; set; }
-        public string Nome { get; set; } = string.Empty;
+        public int CampeonatoId { get; set; }
         public DateTime DataInicio { get; set; }
         public DateTime DataFim { get; set; }
         public string Tipo { get; set; } = string.Empty;
-
-        public List<TemporadaDto> Temporadas { get; set; } = new();
     }
 }

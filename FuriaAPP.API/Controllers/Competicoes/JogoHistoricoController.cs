@@ -18,9 +18,11 @@ namespace FuriaAPP.API.Controllers
         }
 
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<JogoHistoricoDto>>> GetAll()
+       public async Task<ActionResult<IEnumerable<JogoHistoricoDto>>> GetAll()
         {
             var jogosHistorico = await _context.jogoHistoricos
+            .Include(j => j.Temporada)
+            .ThenInclude(t => t.Campeonato)
             .Select(j => new JogoHistoricoDto
             {
                 Id = j.Id,
@@ -28,6 +30,10 @@ namespace FuriaAPP.API.Controllers
                 Adversario = j.Adversario,
                 Campeonato = j.Campeonato,
                 DataJogo = j.DataJogo,
+                Temporada = j.Temporada.Nome,
+                Resultado = j.PontuacaoFuria > j.PontuacaoAdversario ? "Vitória"
+                      : j.PontuacaoFuria < j.PontuacaoAdversario ? "Derrota"
+                      : "Empate"
             })
             .ToListAsync();
 
@@ -38,15 +44,21 @@ namespace FuriaAPP.API.Controllers
         public async Task<ActionResult<JogoHistoricoDto>> GetById(int id)
         {
             var jogosHistorico = await _context.jogoHistoricos
-            .Where(j => j.Id == id)
+            .Include(j => j.Temporada)
+            .ThenInclude(t => t.Campeonato)
             .Select(j => new JogoHistoricoDto
             {
                 Id = j.Id,
+                Jogo = j.Jogo,
                 Adversario = j.Adversario,
                 Campeonato = j.Campeonato,
-                DataJogo = j.DataJogo
+                DataJogo = j.DataJogo,
+                Temporada = j.Temporada.Nome,
+                Resultado = j.PontuacaoFuria > j.PontuacaoAdversario ? "Vitória"
+                      : j.PontuacaoFuria < j.PontuacaoAdversario ? "Derrota"
+                      : "Empate"
             })
-            .FirstOrDefaultAsync();
+            .FirstOrDefaultAsync(j => j.Id == id);
 
             if (jogosHistorico == null)
             {
@@ -71,18 +83,24 @@ namespace FuriaAPP.API.Controllers
                 return NotFound("Jogo não encontrado.");
             }
 
-            var campeonato = await _context.Campeonatos.FindAsync(dto.CampeonatoId);
-            if (campeonato == null)
+            var temporada = await _context.Temporadas.FindAsync(dto.TemporadaId);
+            if (temporada == null)
             {
-                return NotFound("Campeonato não encontrado.");
+                return NotFound("Temporada não encontrada.");
             }
 
             var novoJogoHistorico = new JogoHistorico
             {
                 Jogo = dto.Jogo,         
                 Adversario = dto.Adversario,
-                Campeonato = dto.Campeonato, 
-                DataJogo = dto.DataJogo
+                Temporada = temporada,
+                CampeonatoId = temporada.CampeonatoId, 
+                DataJogo = dto.DataJogo,
+                PontuacaoFuria = dto.PontuacaoFuria,
+                PontuacaoAdversario = dto.PontuacaoAdversario,
+                Resultado = dto.PontuacaoFuria > dto.PontuacaoAdversario ? "Vitória"
+                        : dto.PontuacaoFuria < dto.PontuacaoAdversario ? "Derrota"
+                        : "Empate"
             };
 
             _context.jogoHistoricos.Add(novoJogoHistorico);
@@ -105,17 +123,23 @@ namespace FuriaAPP.API.Controllers
 
             var jogo = await _context.Jogos.FindAsync(dto.Id);
             var adversario = await _context.Adversarios.FindAsync(dto.AdversarioId);
-            var campeonato = await _context.Campeonatos.FindAsync(dto.CampeonatoId);
+            var temporada = await _context.Temporadas.FindAsync(dto.TemporadaId);
 
-            if (jogo == null || adversario == null || campeonato == null)
+            if (jogo == null || adversario == null || temporada == null)
             {
                 return BadRequest ("Um ou mais IDs sao invalidos.");
             }
 
             jogoHistorico.Jogo = dto.Jogo;
             jogoHistorico.Adversario = dto.Adversario;
-            jogoHistorico.Campeonato = dto.Campeonato;
+            jogoHistorico.CampeonatoId = temporada.CampeonatoId;
+            jogoHistorico.Temporada = temporada;
             jogoHistorico.DataJogo = dto.DataJogo;
+            jogoHistorico.PontuacaoFuria = dto.PontuacaoFuria;
+            jogoHistorico.PontuacaoAdversario = dto.PontuacaoAdversario;
+            jogoHistorico.Resultado = dto.PontuacaoFuria > dto.PontuacaoAdversario ? "Vitória"
+                        : dto.PontuacaoFuria < dto.PontuacaoAdversario ? "Derrota"
+                        : "Empate";
 
             await _context.SaveChangesAsync();
 

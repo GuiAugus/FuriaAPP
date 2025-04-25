@@ -24,10 +24,7 @@ namespace FuriaAPP.API.Controllers
                 .Select(c => new CampeonatoDto
                 {
                     Id = c.Id,
-                    Nome = c.Nome,
-                    DataInicio = c.DataInicio,
-                    DataFim = c.DataFim,
-                    Tipo = c.Tipo
+                    Nome = c.Nome
                 })
                 .ToListAsync();
 
@@ -42,10 +39,7 @@ namespace FuriaAPP.API.Controllers
                 .Select(c => new CampeonatoDto
                 {
                     Id = c.Id,
-                    Nome = c.Nome,
-                    DataInicio = c.DataInicio,
-                    DataFim = c.DataFim,
-                    Tipo = c.Tipo
+                    Nome = c.Nome
                 })
                 .FirstOrDefaultAsync();
 
@@ -62,10 +56,7 @@ namespace FuriaAPP.API.Controllers
         {
             var campeonato = new Campeonato
             {
-                Nome = dto.Nome,
-                DataInicio = dto.DataInicio,
-                DataFim = dto.DataFim,
-                Tipo = dto.Tipo
+                Nome = dto.Nome
             };
 
             _context.Campeonatos.Add(campeonato);
@@ -91,9 +82,6 @@ namespace FuriaAPP.API.Controllers
             }
 
             campeonato.Nome = dto.Nome;
-            campeonato.DataInicio = dto.DataInicio;
-            campeonato.DataFim = dto.DataFim;
-            campeonato.Tipo = dto.Tipo;
 
             await _context.SaveChangesAsync();
 

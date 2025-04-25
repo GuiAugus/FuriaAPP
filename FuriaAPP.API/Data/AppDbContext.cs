@@ -11,6 +11,7 @@ namespace FuriaAPP.API.Data
         public DbSet<JogoHistorico> jogoHistoricos{ get; set; }
         public DbSet<Jogo> Jogos { get; set; }
         public DbSet<Campeonato> Campeonatos{ get; set; }
+        public DbSet<Temporada> Temporadas{ get; set; }
         public DbSet<Adversario> Adversarios{ get; set; }
     }
 }
