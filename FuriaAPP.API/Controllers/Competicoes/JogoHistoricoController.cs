@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace FuriaAPP.API.Controllers
 {
-    [Route("api/[controller]")]
+    [Route("api/competicoes/[controller]")]
     [ApiController]
     public class JogoHistoricoController : ControllerBase
     {

@@ -5,7 +5,7 @@ using FuriaAPP.API.Models;
 
 namespace FuriaAPP.API.Controllers
 {
-    [Route("api/[controller]")]
+    [Route("api/competicoes/[controller]")]
     [ApiController]
     public class JogosController : ControllerBase
     {
