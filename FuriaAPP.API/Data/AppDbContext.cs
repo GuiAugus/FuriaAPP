@@ -8,5 +8,6 @@ namespace FuriaAPP.API.Data
         public AppDbContext(DbContextOptions<AppDbContext> options) : base(options) {}
 
         public DbSet<Historia> Historias { get; set; }
+        public DbSet<JogoHistorico> jogoHistoricos{ get; set; }
     }
 }
