@@ -9,5 +9,6 @@ namespace FuriaAPP.API.Data
 
         public DbSet<Historia> Historias { get; set; }
         public DbSet<JogoHistorico> jogoHistoricos{ get; set; }
+        public DbSet<Jogo> Jogos { get; set; }
     }
 }
