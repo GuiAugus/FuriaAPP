@@ -14,19 +14,20 @@ namespace FuriaAPP.Client.Services
             _httpClient = httpClient;
         }
 
-        public async Task<List<UsuarioDto>> GetUsuariosAsync()
+        public async Task<List<UsuarioDto>?> GetUsuariosAsync()
         {
             return await _httpClient.GetFromJsonAsync<List<UsuarioDto>>("https://localhost:5101/api/usuarios");
         }
 
-        public async Task<UsuarioDto> GetUsuarioByIdAsync(int id)
+        public async Task<UsuarioDto?> GetUsuarioByIdAsync(int id)
         {
             return await _httpClient.GetFromJsonAsync<UsuarioDto>($"https://localhost:5101/api/usuarios/{id}");
         }
 
-        public async Task<UsuarioDto> CreateUsuarioAsync(UsuarioDto usuarioDto)
+        public async Task<UsuarioDto?> CreateUsuarioAsync(UsuarioDto usuarioDto)
         {
             var response = await _httpClient.PostAsJsonAsync("https://localhost:5101/api/usuarios", usuarioDto);
+            response.EnsureSuccessStatusCode();
             return await response.Content.ReadFromJsonAsync<UsuarioDto>();
         }
     }

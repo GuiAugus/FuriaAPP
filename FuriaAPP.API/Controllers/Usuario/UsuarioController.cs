@@ -138,7 +138,7 @@ public class UsuarioController : ControllerBase
 
     // POST: api/usuario/login
     [HttpPost("login")]
-    public async Task<ActionResult<string>> Login(UsuarioLoginDto loginDto)
+    public async Task<ActionResult<string>> Login(LoginDto loginDto)
     {
         var usuario = await _context.Usuarios
             .FirstOrDefaultAsync(u => u.Email == loginDto.Email);
