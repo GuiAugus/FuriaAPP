@@ -1,6 +1,6 @@
 using FuriaAPP.API.Data;
-using FuriaAPP.API.DTOs;
 using FuriaAPP.API.Models;
+using FuriaAPP.Shared.DTOs.Jogo;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 

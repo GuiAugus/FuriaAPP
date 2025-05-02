@@ -1,6 +1,4 @@
-using FuriaAPP.API.Models.Usuario;
-
-namespace FuriaAPP.API.DTOs.Usuario
+namespace FuriaAPP.Shared.DTOs.Usuario
 {
     public class UsuarioDto
     {
@@ -10,6 +8,6 @@ namespace FuriaAPP.API.DTOs.Usuario
         public string Email { get; set; } = string.Empty;
         public string Senha { get; set; } = string.Empty;
 
-        public List<UsuarioJogoInteresseDto> JogoDeInteresse { get; set; } = new ();
+        public List<UsuarioJogoInteresseDto> JogoDeInteresse { get; set; } = new List<UsuarioJogoInteresseDto>();
     }
 }

@@ -1,7 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
 using FuriaAPP.API.Data;
-using FuriaAPP.API.DTOs;
 using FuriaAPP.API.Models;
+using FuriaAPP.Shared.DTOs.Jogo;
 
 namespace FuriaAPP.API.Controllers
 {

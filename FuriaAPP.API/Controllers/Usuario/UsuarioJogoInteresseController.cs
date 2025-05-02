@@ -1,7 +1,6 @@
 using FuriaAPP.API.Data;
-using FuriaAPP.API.DTOs;
-using FuriaAPP.API.DTOs.Usuario;
 using FuriaAPP.API.Models.Usuario;
+using FuriaAPP.Shared.DTOs.Usuario;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 

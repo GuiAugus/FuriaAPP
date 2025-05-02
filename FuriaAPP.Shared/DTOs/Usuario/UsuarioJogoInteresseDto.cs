@@ -1,4 +1,4 @@
-namespace FuriaAPP.API.DTOs.Usuario
+namespace FuriaAPP.Shared.DTOs.Usuario
 {
     public class UsuarioJogoInteresseDto
     {

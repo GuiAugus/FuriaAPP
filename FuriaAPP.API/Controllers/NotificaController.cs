@@ -1,8 +1,9 @@
 using FuriaAPP.API.Data;
-using FuriaAPP.API.DTOs;
+using FuriaAPP.Shared.DTOs;
 using FuriaAPP.API.Models;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using FuriaAPP.Shared.DTOs.Usuario;
 
 namespace FuriaAPP.API.Controllers {
     [Route("api/[controller]")]

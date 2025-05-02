@@ -1,4 +1,4 @@
-namespace FuriaAPP.API.DTOs
+namespace FuriaAPP.Shared.DTOs.Usuario
 {
     public class HistoriaDto
     {
