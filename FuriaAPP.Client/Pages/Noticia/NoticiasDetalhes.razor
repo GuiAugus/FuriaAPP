@@ -1,0 +1,77 @@
+@page "/noticia/{id:int}"
+@using FuriaAPP.Shared.DTOs.Usuario
+@using System.Net.Http.Json
+@inject HttpClient Http
+@inject NavigationManager NavigationManager
+
+@if (noticia == null)
+{
+    <div class="text-center">
+        <div class="spinner-border text-primary" role="status">
+            <span class="visually-hidden">Carregando...</span>
+        </div>
+    </div>
+}
+else
+{
+    <div class="container mt-4">
+        <button @onclick="VoltarParaNoticias" class="btn btn-outline-secondary mb-3">
+            &larr; Voltar para notícias
+        </button>
+        
+        <article class="noticia-detalhe">
+            <header class="mb-4">
+                <h1>@noticia.Titulo</h1>
+                <div class="text-muted mb-3">
+                    Publicado em: @noticia.DataPublicacao.ToString("dd/MM/yyyy HH:mm")
+                    @if (noticia.JogoId.HasValue)
+                    {
+                        <span class="badge bg-primary ms-2">Jogo ID: @noticia.JogoId</span>
+                    }
+                </div>
+                @if (noticia.CampeonatoId.HasValue)
+                {
+                    <div>
+                        <span class="badge bg-info">Campeonato ID: @noticia.CampeonatoId</span>
+                    </div>
+                }
+            </header>
+            
+            <div class="noticia-conteudo">
+                @if (!string.IsNullOrEmpty(noticia.Conteudo))
+                {
+                    var conteudoComQuebras = noticia.Conteudo.Replace("\n", "<br />");
+                    @((MarkupString)conteudoComQuebras)
+                }
+            </div>
+            
+            @if (noticia.JogoHistoricoId.HasValue)
+            {
+                <div class="mt-4 p-3 bg-light rounded">
+                    <h5>ID da Partida: @noticia.JogoHistoricoId</h5>
+                </div>
+            }
+        </article>
+    </div>
+}
+
+@code {
+    [Parameter]
+    public int Id { get; set; }
+
+    private NoticiaDto? noticia;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        var response = await Http.GetAsync($"api/noticia/{Id}");
+        if (response.IsSuccessStatusCode)
+        {
+            noticia = await response.Content.ReadFromJsonAsync<NoticiaDto>();
+        }
+    }
+
+    private void VoltarParaNoticias()
+    {
+        NavigationManager.NavigateTo("/noticias");
+    }
+}

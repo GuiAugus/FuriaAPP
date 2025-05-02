@@ -1,5 +1,4 @@
 using FuriaAPP.API.Data;
-using FuriaAPP.API.Models;
 using FuriaAPP.Shared.DTOs.Jogo;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -21,9 +20,11 @@ namespace FuriaAPP.API.Controllers
         public async Task<ActionResult<IEnumerable<TemporadaDto>>> GetTemporadas()
         {
             var temporadas = await _context.Temporadas
-                .Select(t => new TemporadaDto
+                .Include(t => t.Campeonato)
+                .Select(t => new FuriaAPP.Shared.DTOs.Jogo.TemporadaDto
                 {
                     Id = t.Id,
+                    Nome = t.Nome,
                     CampeonatoId = t.CampeonatoId,
                     DataInicio = t.DataInicio,
                     DataFim = t.DataFim,
@@ -38,10 +39,12 @@ namespace FuriaAPP.API.Controllers
         public async Task<ActionResult<TemporadaDto>> GetTemporada(int id)
         {
             var temporada = await _context.Temporadas
+                .Include(t => t.Campeonato)
                 .Where(t => t.Id == id)
-                .Select(t => new TemporadaDto
+                .Select(t => new FuriaAPP.Shared.DTOs.Jogo.TemporadaDto
                 {
                     Id = t.Id,
+                    Nome = t.Nome,
                     CampeonatoId = t.CampeonatoId,
                     DataInicio = t.DataInicio,
                     DataFim = t.DataFim,
@@ -58,12 +61,19 @@ namespace FuriaAPP.API.Controllers
         [HttpPost]
         public async Task<ActionResult<TemporadaDto>> PostTemporada(TemporadaDto dto)
         {
+            if (!ModelState.IsValid)
+                return BadRequest(ModelState);
+
             var campeonato = await _context.Campeonatos.FindAsync(dto.CampeonatoId);
             if (campeonato == null)
                 return BadRequest("Campeonato não encontrado.");
 
+            if (dto.DataFim.HasValue && dto.DataFim.Value < dto.DataInicio)
+                return BadRequest("Data de fim não pode ser anterior à data de início");
+
             var temporada = new Temporada
             {
+                Nome = dto.Nome,
                 CampeonatoId = dto.CampeonatoId,
                 DataInicio = dto.DataInicio,
                 DataFim = dto.DataFim,
@@ -82,16 +92,27 @@ namespace FuriaAPP.API.Controllers
         public async Task<IActionResult> PutTemporada(int id, TemporadaDto dto)
         {
             if (id != dto.Id)
-                return BadRequest();
+                return BadRequest("ID da URL não corresponde ao ID do corpo");
+
+            if (!ModelState.IsValid)
+                return BadRequest(ModelState);
 
             var temporada = await _context.Temporadas.FindAsync(id);
             if (temporada == null)
                 return NotFound();
 
+            var campeonato = await _context.Campeonatos.FindAsync(dto.CampeonatoId);
+            if (campeonato == null)
+                return BadRequest("Campeonato não encontrado.");
+
+            if (dto.DataFim.HasValue && dto.DataFim.Value < dto.DataInicio)
+                return BadRequest("Data de fim não pode ser anterior à data de início");
+
+            temporada.Nome = dto.Nome;
+            temporada.CampeonatoId = dto.CampeonatoId;
             temporada.DataInicio = dto.DataInicio;
             temporada.DataFim = dto.DataFim;
             temporada.Tipo = dto.Tipo;
-            temporada.CampeonatoId = dto.CampeonatoId;
 
             await _context.SaveChangesAsync();
 

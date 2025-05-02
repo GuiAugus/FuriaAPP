@@ -18,13 +18,23 @@ namespace FuriaAPP.API.Controllers {
         }
 
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<NoticiaDto>>> GetAll()
+        public async Task<ActionResult<IEnumerable<NoticiaDto>>> GetAll(
+            [FromQuery] List<int>? jogosInteresse = null)
         {
-            var noticias = await _context.Noticias
+            var query = _context.Noticias
                 .Include(n => n.Jogo)
                 .Include(n => n.Campeonato)
                 .Include(n => n.Temporada)
                 .Include(n => n.JogoHistorico)
+                .AsQueryable();
+
+            // Aplica filtro apenas se a lista de interesses for fornecida e não vazia
+            if (jogosInteresse != null && jogosInteresse.Any())
+            {
+                query = query.Where(n => n.JogoId.HasValue && jogosInteresse.Contains(n.JogoId.Value));
+            }
+
+            var noticias = await query
                 .Select(n => new NoticiaDto
                 {
                     Id = n.Id,
@@ -36,6 +46,7 @@ namespace FuriaAPP.API.Controllers {
                     TemporadaId = n.TemporadaId,
                     JogoHistoricoId = n.JogoHistoricoId
                 })
+                .OrderByDescending(n => n.DataPublicacao)
                 .ToListAsync();
 
             return Ok(noticias);

@@ -1,5 +1,6 @@
 using System;
 using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace FuriaAPP.API.Models
 {
@@ -10,6 +11,10 @@ namespace FuriaAPP.API.Models
 
         [Required]
         public string Nome { get; set; } = string.Empty;
+
+        [ForeignKey("Jogo")]
+        public int JogoId { get; set; }
+        public Jogo ?Jogo { get; set; }
 
         public ICollection<Temporada> Temporadas { get; set; } = new List<Temporada>();
     }
