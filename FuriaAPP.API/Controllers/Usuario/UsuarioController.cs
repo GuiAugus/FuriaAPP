@@ -11,6 +11,7 @@ using System.Text;
 using Microsoft.Extensions.Options;
 using BCrypt.Net;
 using Microsoft.Extensions.Logging;
+using System.Text.Json;
 
 namespace FuriaAPP.API.Controllers
 {
@@ -216,14 +217,10 @@ namespace FuriaAPP.API.Controllers
         private string GenerateJwtToken(Usuario usuario)
         {
             if (usuario == null)
-            {
                 throw new ArgumentNullException(nameof(usuario));
-            }
 
             if (string.IsNullOrEmpty(_jwtSettings.SecretKey) || _jwtSettings.SecretKey.Length < 32)
-            {
                 throw new ArgumentException("Configuração JWT inválida - chave secreta muito curta ou ausente");
-            }
 
             var tokenHandler = new JwtSecurityTokenHandler();
             var key = Encoding.UTF8.GetBytes(_jwtSettings.SecretKey);
@@ -232,8 +229,30 @@ namespace FuriaAPP.API.Controllers
             {
                 new Claim(ClaimTypes.NameIdentifier, usuario.Id.ToString()),
                 new Claim(ClaimTypes.Email, usuario.Email),
-                new Claim(ClaimTypes.Name, usuario.Nome)
+                new Claim(ClaimTypes.Name, usuario.Nome),
+                new Claim("jwt_version", "1.0") 
             };
+
+            try
+            {
+                var jogosInteresse = usuario.JogosDeInteresse?
+                    .Select(ji => new UsuarioJogoInteresseDto
+                    {
+                        JogoId = ji.JogoId,
+                        NomeJogo = ji.Jogo?.Nome ?? "Desconhecido"
+                    }).ToList() ?? new List<UsuarioJogoInteresseDto>();
+
+                claims.Add(new Claim("jogos_interesse", 
+                    JsonSerializer.Serialize(jogosInteresse, new JsonSerializerOptions
+                    {
+                        PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
+                        DefaultIgnoreCondition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull
+                    })));
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Erro ao serializar jogos de interesse para JWT");
+            }
 
             var tokenDescriptor = new SecurityTokenDescriptor
             {
@@ -246,9 +265,17 @@ namespace FuriaAPP.API.Controllers
                     SecurityAlgorithms.HmacSha256Signature)
             };
 
-            var token = tokenHandler.CreateToken(tokenDescriptor);
-            return tokenHandler.WriteToken(token);
-        }
+            try
+            {
+                var token = tokenHandler.CreateToken(tokenDescriptor);
+                return tokenHandler.WriteToken(token);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Erro ao gerar token JWT");
+                throw new SecurityTokenException("Falha na geração do token de autenticação", ex);
+            }
+}
 
         private UsuarioDto MapToDto(Usuario usuario)
         {

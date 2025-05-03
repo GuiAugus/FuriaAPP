@@ -1,4 +1,4 @@
-namespace FuriaAPP.Shared.DTOs.Usuario
+namespace FuriaAPP.Shared.DTOs
 {
     public class NoticiaDto
     {
@@ -11,5 +11,6 @@ namespace FuriaAPP.Shared.DTOs.Usuario
         public int? CampeonatoId { get; set; }
         public int? TemporadaId { get; set; }
         public int? JogoHistoricoId { get; set; }
+        public string? NomeJogo { get; set; }
     }
 }

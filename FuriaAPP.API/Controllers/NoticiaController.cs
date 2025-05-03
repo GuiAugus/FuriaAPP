@@ -5,51 +5,59 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using FuriaAPP.Shared.DTOs.Usuario;
 
+
 namespace FuriaAPP.API.Controllers {
     [Route("api/[controller]")]
     [ApiController]
     public class NoticiaController : ControllerBase
     {
         private readonly AppDbContext _context;
+        private readonly ILogger<NoticiaController> _logger;
 
-        public NoticiaController(AppDbContext context)
+        public NoticiaController(AppDbContext context, ILogger<NoticiaController> logger)
         {
             _context = context;
+            _logger = logger;
         }
 
         [HttpGet]
         public async Task<ActionResult<IEnumerable<NoticiaDto>>> GetAll(
             [FromQuery] List<int>? jogosInteresse = null)
         {
-            var query = _context.Noticias
-                .Include(n => n.Jogo)
-                .Include(n => n.Campeonato)
-                .Include(n => n.Temporada)
-                .Include(n => n.JogoHistorico)
-                .AsQueryable();
-
-            // Aplica filtro apenas se a lista de interesses for fornecida e não vazia
-            if (jogosInteresse != null && jogosInteresse.Any())
+            try
             {
-                query = query.Where(n => n.JogoId.HasValue && jogosInteresse.Contains(n.JogoId.Value));
-            }
+                var query = _context.Noticias
+                    .Include(n => n.Jogo)
+                    .AsQueryable();
 
-            var noticias = await query
-                .Select(n => new NoticiaDto
+                if (jogosInteresse != null && jogosInteresse.Any())
                 {
-                    Id = n.Id,
-                    Titulo = n.Titulo,
-                    Conteudo = n.Conteudo,
-                    DataPublicacao = n.DataPublicacao,
-                    JogoId = n.JogoId,
-                    CampeonatoId = n.CampeonatoId,
-                    TemporadaId = n.TemporadaId,
-                    JogoHistoricoId = n.JogoHistoricoId
-                })
-                .OrderByDescending(n => n.DataPublicacao)
-                .ToListAsync();
+                    query = query.Where(n => !n.JogoId.HasValue || jogosInteresse.Contains(n.JogoId.Value));
+                }
 
-            return Ok(noticias);
+                var noticias = await query
+                    .Select(n => new NoticiaDto
+                    {
+                        Id = n.Id,
+                        Titulo = n.Titulo,
+                        Conteudo = n.Conteudo,
+                        DataPublicacao = n.DataPublicacao,
+                        JogoId = n.JogoId,
+                        CampeonatoId = n.CampeonatoId,
+                        TemporadaId = n.TemporadaId,
+                        JogoHistoricoId = n.JogoHistoricoId,
+                        NomeJogo = n.Jogo != null ? n.Jogo.Nome : null
+                    })
+                    .OrderByDescending(n => n.DataPublicacao)
+                    .ToListAsync();
+
+                return Ok(noticias);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Erro ao buscar notícias");
+                return StatusCode(500, new { Message = "Erro interno ao processar a requisição" });
+            }
         }
 
         [HttpGet("{id}")]
