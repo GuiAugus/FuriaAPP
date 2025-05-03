@@ -70,18 +70,21 @@
                             else
                             {
                                 <div class="border rounded p-3 bg-light" style="max-height: 200px; overflow-y: auto;">
-                                    @foreach (var jogo in jogosDisponiveis)
+                                    @if (jogosDisponiveis != null)
                                     {
-                                        <div class="form-check mb-2">
-                                            <input type="checkbox" 
-                                                   id="@($"jogo-{jogo.Id}")" 
-                                                   class="form-check-input" 
-                                                   checked="@jogosSelecionados.Contains(jogo.Id)"
-                                                   @onchange="@(e => ToggleJogoSelecionado(jogo.Id, (bool)e.Value))" />
-                                            <label class="form-check-label" for="@($"jogo-{jogo.Id}")">
-                                                @jogo.Nome
-                                            </label>
-                                        </div>
+                                        @foreach (var jogo in jogosDisponiveis)
+                                        {
+                                            <div class="form-check mb-2">
+                                                <input type="checkbox" 
+                                                    id="@($"jogo-{jogo.Id}")" 
+                                                    class="form-check-input" 
+                                                    checked="@jogosSelecionados.Contains(jogo.Id)"
+                                                        @onchange="@(e => ToggleJogoSelecionado(jogo.Id, e.Value))" />
+                                                <label class="form-check-label" for="@($"jogo-{jogo.Id}")">
+                                                    @jogo.Nome
+                                                </label>
+                                            </div>
+                                        }
                                     }
                                 </div>
                             }
@@ -179,20 +182,24 @@
         }
     }
 
-    private void ToggleJogoSelecionado(int jogoId, bool isSelected)
+    private void ToggleJogoSelecionado(int jogoId, object? isSelectedObj)
     {
-        if (isSelected)
+        if (isSelectedObj is bool isSelected)
         {
-            if (!jogosSelecionados.Contains(jogoId))
+            if (isSelected)
             {
-                jogosSelecionados.Add(jogoId);
+                if (!jogosSelecionados.Contains(jogoId))
+                {
+                    jogosSelecionados.Add(jogoId);
+                }
+            }
+            else
+            {
+                jogosSelecionados.Remove(jogoId);
             }
         }
-        else
-        {
-            jogosSelecionados.Remove(jogoId);
-        }
     }
+
 
     private async Task HandleCadastro()
     {

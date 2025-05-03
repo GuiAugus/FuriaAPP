@@ -16,7 +16,7 @@ public class JwtService
     public string GenerateToken(UsuarioDto usuario)
     {
         var jwtSettings = _configuration.GetSection("JwtSettings");
-        var secretKey = jwtSettings["SecretKey"];
+        var secretKey = jwtSettings["SecretKey"] ?? throw new InvalidOperationException("A chave secreta JWT não está configurada.");
         var issuer = jwtSettings["ValidIssuer"];
         var audience = jwtSettings["ValidAudience"];
         var expiryInMinutes = Convert.ToInt32(jwtSettings["ExpiryInMinutes"]);
