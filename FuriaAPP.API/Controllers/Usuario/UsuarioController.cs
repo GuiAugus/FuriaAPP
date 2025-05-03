@@ -3,201 +3,276 @@ using FuriaAPP.API.Models.Usuario;
 using FuriaAPP.Shared.DTOs.Usuario;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using System.Security.Cryptography;
+using System.Security.Claims;
+using Microsoft.AspNetCore.Authorization;
+using System.IdentityModel.Tokens.Jwt;
+using Microsoft.IdentityModel.Tokens;
 using System.Text;
+using Microsoft.Extensions.Options;
+using BCrypt.Net;
+using Microsoft.Extensions.Logging;
 
-[Route("api/[controller]")]
-[ApiController]
-public class UsuarioController : ControllerBase
+namespace FuriaAPP.API.Controllers
 {
-    private readonly AppDbContext _context;
-
-    public UsuarioController(AppDbContext context)
+    [Route("api/[controller]")]
+    [ApiController]
+    public class UsuarioController : ControllerBase
     {
-        _context = context;
-    }
+        private readonly AppDbContext _context;
+        private readonly JwtSettings _jwtSettings;
+        private readonly ILogger<UsuarioController> _logger;
 
-    // GET: api/usuario
-    [HttpGet]
-    public async Task<ActionResult<IEnumerable<UsuarioDto>>> GetAll()
-    {
-        var usuarios = await _context.Usuarios
-            .Include(u => u.JogosDeInteresse) 
-            .ThenInclude(ji => ji.Jogo) 
-            .ToListAsync();
-
-        if (usuarios == null || !usuarios.Any())
+        public UsuarioController(
+            AppDbContext context,
+            IOptions<JwtSettings> jwtSettings,
+            ILogger<UsuarioController> logger)
         {
-            return Ok(new List<UsuarioDto>());
+            _context = context;
+            _jwtSettings = jwtSettings.Value;
+            _logger = logger;
         }
 
-        var usuariosDto = usuarios.Select(usuario => new UsuarioDto
+        [HttpGet]
+        public async Task<ActionResult<IEnumerable<UsuarioDto>>> GetAll()
         {
-            Id = usuario.Id,
-            Nome = usuario.Nome,
-            CPF = usuario.CPF,
-            Email = usuario.Email,
-            JogoDeInteresse = usuario.JogosDeInteresse
-                .Where(ji => ji.Jogo != null)
-                .Select(ji => new UsuarioJogoInteresseDto
-                {
-                    JogoId = ji.JogoId,
-                    NomeJogo = ji.Jogo.Nome
-                })
-                .ToList()
-        }).ToList();
-
-        return Ok(usuariosDto);
-    }
-
-
-    // GET: api/usuario/1
-    [HttpGet("{id}")]
-    public async Task<ActionResult<UsuarioDto>> GetById(int id)
-    {
-        var usuario = await _context.Usuarios
-            .Include(u => u.JogosDeInteresse)
-            .ThenInclude(ji => ji.Jogo) 
-            .FirstOrDefaultAsync(u => u.Id == id);
-
-        if (usuario == null)
-        {
-            return Ok(new UsuarioDto());
-        }
-
-        var usuarioDto = new UsuarioDto
-        {
-            Id = usuario.Id,
-            Nome = usuario.Nome,
-            CPF = usuario.CPF,
-            Email = usuario.Email,
-            JogoDeInteresse = usuario.JogosDeInteresse.Select(ji => new UsuarioJogoInteresseDto
+            try
             {
-                JogoId = ji.JogoId,
-                NomeJogo = ji.Jogo.Nome
-            }).ToList()
-        };
+                var usuarios = await _context.Usuarios
+                    .AsNoTracking()
+                    .Include(u => u.JogosDeInteresse)
+                    .ThenInclude(ji => ji.Jogo)
+                    .OrderBy(u => u.Id)
+                    .ToListAsync();
 
-        return Ok(usuarioDto);
-    }
-
-
-    // POST: api/usuario/criar
-    [HttpPost("cadastro")]
-    public async Task<ActionResult<UsuarioDto>> Create(UsuarioDto usuarioDto)
-    {
-        if (await _context.Usuarios.AnyAsync(u => u.Email == usuarioDto.Email))
-        {
-            return BadRequest(new { Message = "O email já está em uso." });
-        }
-
-        var usuario = new Usuario
-        {
-            Nome = usuarioDto.Nome,
-            CPF = usuarioDto.CPF,
-            Email = usuarioDto.Email,
-            Senha = HashPassword(usuarioDto.Senha)
-        };
-
-        foreach (var jogo in usuarioDto.JogoDeInteresse ?? new List<UsuarioJogoInteresseDto>())
-        {
-            if (jogo?.JogoId != null)
+                return Ok(usuarios.Select(MapToDto).ToList());
+            }
+            catch (Exception ex)
             {
-                var jogoExistente = await _context.Jogos.FindAsync(jogo.JogoId);
-                if (jogoExistente != null)
-                {
-                    usuario.JogosDeInteresse.Add(new UsuarioJogoInteresse { JogoId = jogo.JogoId });
-                }
-                else
-                {
-                    return BadRequest(new { Message = $"Jogo com ID {jogo.JogoId} não encontrado." });
-                }
+                _logger.LogError(ex, "Erro ao buscar todos os usuários");
+                return StatusCode(500, new { Message = "Erro interno ao processar a requisição" });
             }
         }
 
-        _context.Usuarios.Add(usuario);
-        await _context.SaveChangesAsync();
-
-        var usuarioDtoResponse = new UsuarioDto
+        [HttpGet("{id}")]
+        public async Task<ActionResult<UsuarioDto>> GetById(int id)
         {
-            Id = usuario.Id,
-            Nome = usuario.Nome,
-            CPF = usuario.CPF,
-            Email = usuario.Email,
-            JogoDeInteresse = usuario.JogosDeInteresse.Select(ji => new UsuarioJogoInteresseDto
+            try
             {
-                JogoId = ji.JogoId,
-                NomeJogo = ji.Jogo != null ? ji.Jogo.Nome : "Jogo não encontrado"  
-            }).ToList()
-        };
+                var currentUserId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+                if (string.IsNullOrEmpty(currentUserId) || !int.TryParse(currentUserId, out var userId))
+                {
+                    return Unauthorized(new { Message = "Usuário não autenticado corretamente" });
+                }
 
-        return CreatedAtAction(nameof(GetById), new { id = usuario.Id }, usuarioDtoResponse);
-    }
+                var usuario = await _context.Usuarios
+                    .AsNoTracking()
+                    .Include(u => u.JogosDeInteresse)
+                    .ThenInclude(ji => ji.Jogo)
+                    .FirstOrDefaultAsync(u => u.Id == id);
 
+                if (usuario == null)
+                {
+                    return NotFound(new { Message = "Usuário não encontrado" });
+                }
 
+                if (userId != usuario.Id)
+                {
+                    return Forbid();
+                }
 
-    // POST: api/usuario/login
-    [HttpPost("login")]
-    public async Task<ActionResult<string>> Login(LoginDto loginDto)
-    {
-        var usuario = await _context.Usuarios
-            .FirstOrDefaultAsync(u => u.Email == loginDto.Email);
-
-        if (usuario == null)
-        {
-            return Unauthorized("Credenciais inválidas.");
+                return Ok(MapToDto(usuario));
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, $"Erro ao buscar usuário com ID {id}");
+                return StatusCode(500, new { Message = "Erro interno ao processar a requisição" });
+            }
         }
 
-        if (!VerifyPassword(loginDto.Senha, usuario.Senha))
+        [HttpPost("cadastro")]
+        [AllowAnonymous]
+        public async Task<ActionResult<AuthResponse>> Cadastrar(UsuarioDto usuarioDto)
         {
-            return Unauthorized("Credenciais inválidas.");
+            try
+            {
+                if (await _context.Usuarios.AnyAsync(u => u.Email == usuarioDto.Email))
+                {
+                    return BadRequest(new { Message = "Email já está em uso" });
+                }
+
+                var usuario = new Usuario
+                {
+                    Nome = usuarioDto.Nome,
+                    CPF = usuarioDto.CPF,
+                    Email = usuarioDto.Email,
+                    Senha = BCrypt.Net.BCrypt.HashPassword(usuarioDto.Senha + _jwtSettings.Pepper)
+                };
+
+                if (usuarioDto.JogoDeInteresse != null)
+                {
+                    foreach (var jogo in usuarioDto.JogoDeInteresse)
+                    {
+                        if (await _context.Jogos.AnyAsync(j => j.Id == jogo.JogoId))
+                        {
+                            usuario.JogosDeInteresse.Add(new UsuarioJogoInteresse { JogoId = jogo.JogoId });
+                        }
+                    }
+                }
+
+                _context.Usuarios.Add(usuario);
+                await _context.SaveChangesAsync();
+
+                var token = GenerateJwtToken(usuario);
+
+                return Ok(new AuthResponse
+                {
+                    Token = token,
+                    Usuario = MapToDto(usuario),
+                    Expiration = DateTime.UtcNow.AddMinutes(_jwtSettings.ExpiryInMinutes)
+                });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Erro ao cadastrar usuário");
+                return StatusCode(500, new { Message = "Erro interno ao processar o cadastro" });
+            }
         }
 
-        return Ok("Login bem-sucedido!");
-    }
-
-
-
-    // DELETE: api/usuario/1
-    [HttpDelete("{id}")]
-    public async Task<IActionResult> DeleteUsuario(int id)
-    {
-        try
+        [HttpPost("login")]
+        [AllowAnonymous]
+        public async Task<ActionResult<AuthResponse>> Login(LoginDto loginDto)
         {
-            var usuario = await _context.Usuarios
-                .Include(u => u.JogosDeInteresse) 
-                .FirstOrDefaultAsync(u => u.Id == id);
+            try
+            {
+                var usuario = await _context.Usuarios
+                    .AsNoTracking()
+                    .Include(u => u.JogosDeInteresse)
+                    .ThenInclude(ji => ji.Jogo)
+                    .FirstOrDefaultAsync(u => u.Email == loginDto.Email);
 
+                if (usuario == null)
+                {
+                    _logger.LogWarning("Tentativa de login para email não cadastrado: {Email}", loginDto.Email);
+                    return Unauthorized(new { Message = "Credenciais inválidas" });
+                }
+
+                if (!BCrypt.Net.BCrypt.Verify(loginDto.Senha + _jwtSettings.Pepper, usuario.Senha))
+                {
+                    _logger.LogWarning("Senha incorreta para o usuário: {Email}", loginDto.Email);
+                    return Unauthorized(new { Message = "Credenciais inválidas" });
+                }
+
+                var token = GenerateJwtToken(usuario);
+
+                return Ok(new AuthResponse
+                {
+                    Token = token,
+                    Usuario = MapToDto(usuario),
+                    Expiration = DateTime.UtcNow.AddMinutes(_jwtSettings.ExpiryInMinutes)
+                });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Erro durante o login para {Email}", loginDto.Email);
+                return StatusCode(500, new { Message = "Erro interno ao processar o login" });
+            }
+        }
+
+        [HttpDelete("{id}")]
+        public async Task<IActionResult> Delete(int id)
+        {
+            try
+            {
+                var currentUserId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+                if (string.IsNullOrEmpty(currentUserId) || !int.TryParse(currentUserId, out var userId))
+                {
+                    return Unauthorized(new { Message = "Usuário não autenticado corretamente" });
+                }
+
+                var usuario = await _context.Usuarios.FindAsync(id);
+                if (usuario == null)
+                {
+                    return NotFound(new { Message = "Usuário não encontrado" });
+                }
+
+                if (userId != usuario.Id)
+                {
+                    return Forbid();
+                }
+
+                _context.Usuarios.Remove(usuario);
+                await _context.SaveChangesAsync();
+
+                return NoContent();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Erro ao deletar usuário com ID {Id}", id);
+                return StatusCode(500, new { Message = "Erro interno ao processar a requisição" });
+            }
+        }
+
+        #region Métodos Auxiliares
+        private string GenerateJwtToken(Usuario usuario)
+        {
             if (usuario == null)
             {
-                return NotFound(new { Message = "Usuário não encontrado." });
+                throw new ArgumentNullException(nameof(usuario));
             }
 
-            _context.jogoJogoInteresse.RemoveRange(usuario.JogosDeInteresse);
+            if (string.IsNullOrEmpty(_jwtSettings.SecretKey) || _jwtSettings.SecretKey.Length < 32)
+            {
+                throw new ArgumentException("Configuração JWT inválida - chave secreta muito curta ou ausente");
+            }
 
-            _context.Usuarios.Remove(usuario);
+            var tokenHandler = new JwtSecurityTokenHandler();
+            var key = Encoding.UTF8.GetBytes(_jwtSettings.SecretKey);
 
-            await _context.SaveChangesAsync();
+            var claims = new List<Claim>
+            {
+                new Claim(ClaimTypes.NameIdentifier, usuario.Id.ToString()),
+                new Claim(ClaimTypes.Email, usuario.Email),
+                new Claim(ClaimTypes.Name, usuario.Nome)
+            };
 
-            return Ok(new { Message = "Usuário deletado com sucesso." });
+            var tokenDescriptor = new SecurityTokenDescriptor
+            {
+                Subject = new ClaimsIdentity(claims),
+                Expires = DateTime.UtcNow.AddMinutes(_jwtSettings.ExpiryInMinutes),
+                Issuer = _jwtSettings.Issuer,
+                Audience = _jwtSettings.Audience,
+                SigningCredentials = new SigningCredentials(
+                    new SymmetricSecurityKey(key), 
+                    SecurityAlgorithms.HmacSha256Signature)
+            };
+
+            var token = tokenHandler.CreateToken(tokenDescriptor);
+            return tokenHandler.WriteToken(token);
         }
-        catch (Exception ex)
+
+        private UsuarioDto MapToDto(Usuario usuario)
         {
-            return StatusCode(500, new { Message = "Erro ao deletar usuário.", Error = ex.Message });
+            return new UsuarioDto
+            {
+                Id = usuario.Id,
+                Nome = usuario.Nome,
+                CPF = usuario.CPF,
+                Email = usuario.Email,
+                JogoDeInteresse = usuario.JogosDeInteresse?
+                    .Select(ji => new UsuarioJogoInteresseDto
+                    {
+                        JogoId = ji.JogoId,
+                        NomeJogo = ji.Jogo?.Nome ?? "Jogo não encontrado"
+                    }).ToList() ?? new List<UsuarioJogoInteresseDto>()
+            };
         }
+        #endregion
     }
 
-    private string HashPassword(string senha)
+    public class AuthResponse
     {
-        using var sha256 = SHA256.Create();
-        var bytes = Encoding.UTF8.GetBytes(senha);
-        var hash = sha256.ComputeHash(bytes);
-        return Convert.ToBase64String(hash);
-    }
-
-    private bool VerifyPassword(string senhaDigitada, string senhaArmazenada)
-    {
-        var hashDigitado = HashPassword(senhaDigitada);
-        return hashDigitado == senhaArmazenada;
+        public string Token { get; set; } = string.Empty;
+        public UsuarioDto Usuario { get; set; } = new UsuarioDto();
+        public DateTime Expiration { get; set; }
     }
 }

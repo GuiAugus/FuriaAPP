@@ -1,4 +1,8 @@
-﻿<Router AppAssembly="@typeof(App).Assembly">
+﻿@using Microsoft.AspNetCore.Components.Routing
+@using Microsoft.AspNetCore.Components.Web
+@namespace FuriaAPP.Client
+
+<Router AppAssembly="@typeof(Program).Assembly">
     <Found Context="routeData">
         <RouteView RouteData="@routeData" DefaultLayout="@typeof(MainLayout)" />
         <FocusOnNavigate RouteData="@routeData" Selector="h1" />
@@ -6,9 +10,11 @@
     <NotFound>
         <LayoutView Layout="@typeof(MainLayout)">
             <PageTitle>Página não encontrada</PageTitle>
-            <div class="alert alert-warning" role="alert">
-                <h3>Oops! Página não encontrada.</h3>
-                <p>Verifique o endereço ou volte para a <a href="/">página inicial</a>.</p>
+            <div class="alert alert-warning mt-4" role="alert">
+                <div class="container">
+                    <h3 class="alert-heading">Oops! Página não encontrada</h3>
+                    <p>Verifique o endereço ou volte para a <a href="/" class="alert-link">página inicial</a>.</p>
+                </div>
             </div>
         </LayoutView>
     </NotFound>

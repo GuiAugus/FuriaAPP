@@ -3,107 +3,179 @@
 @using FuriaAPP.Shared.DTOs.Jogo
 @using System.Net.Http.Json
 @using Microsoft.AspNetCore.Components.Forms
-@inject HttpClient Http
+@using Microsoft.AspNetCore.Components.Authorization
+@using Blazored.LocalStorage
+@inject IHttpClientFactory HttpClientFactory
 @inject NavigationManager NavigationManager
+@inject ILocalStorageService LocalStorage
+@inject AuthenticationStateProvider AuthStateProvider
+@inject ILogger<Cadastro> Logger
 
-<h1 class="mb-4">Cadastro de Usuário</h1>
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8 col-lg-6">
+            <div class="card shadow">
+                <div class="card-header bg-primary text-white">
+                    <h1 class="h4 mb-0">Cadastro de Usuário</h1>
+                </div>
+                
+                <div class="card-body">
+                    @if (!string.IsNullOrEmpty(errorMessage))
+                    {
+                        <div class="alert alert-danger mb-4">@errorMessage</div>
+                    }
 
-@if (!string.IsNullOrEmpty(errorMessage))
-{
-    <div class="alert alert-danger">@errorMessage</div>
-}
+                    <EditForm Model="usuario" OnValidSubmit="HandleCadastro">
+                        <DataAnnotationsValidator />
+                        <ValidationSummary class="alert alert-danger" />
 
-<EditForm Model="usuario" OnValidSubmit="HandleCadastro">
-    <DataAnnotationsValidator />
-    <ValidationSummary />
+                        <div class="form-floating mb-3">
+                            <InputText id="nome" class="form-control" @bind-Value="usuario.Nome" placeholder=" " />
+                            <label for="nome">Nome Completo</label>
+                            <ValidationMessage For="@(() => usuario.Nome)" class="text-danger small" />
+                        </div>
 
-    <div class="form-group mb-3">
-        <label for="nome" class="form-label">Nome</label>
-        <InputText id="nome" class="form-control" @bind-Value="usuario.Nome" />
-        <ValidationMessage For="@(() => usuario.Nome)" />
-    </div>
+                        <div class="form-floating mb-3">
+                            <InputText id="cpf" class="form-control" @bind-Value="usuario.CPF" placeholder=" " />
+                            <label for="cpf">CPF</label>
+                            <ValidationMessage For="@(() => usuario.CPF)" class="text-danger small" />
+                        </div>
 
-    <div class="form-group mb-3">
-        <label for="cpf" class="form-label">CPF</label>
-        <InputText id="cpf" class="form-control" @bind-Value="usuario.CPF" />
-        <ValidationMessage For="@(() => usuario.CPF)" />
-    </div>
+                        <div class="form-floating mb-3">
+                            <InputText id="email" class="form-control" @bind-Value="usuario.Email" placeholder=" " />
+                            <label for="email">E-mail</label>
+                            <ValidationMessage For="@(() => usuario.Email)" class="text-danger small" />
+                        </div>
 
-    <div class="form-group mb-3">
-        <label for="email" class="form-label">E-mail</label>
-        <InputText id="email" class="form-control" @bind-Value="usuario.Email" />
-        <ValidationMessage For="@(() => usuario.Email)" />
-    </div>
+                        <div class="form-floating mb-3">
+                            <InputText id="senha" type="password" class="form-control" @bind-Value="usuario.Senha" placeholder=" " />
+                            <label for="senha">Senha</label>
+                            <ValidationMessage For="@(() => usuario.Senha)" class="text-danger small" />
+                        </div>
 
-    <div class="form-group mb-3">
-        <label for="senha" class="form-label">Senha</label>
-        <InputText id="senha" type="password" class="form-control" @bind-Value="usuario.Senha" />
-        <ValidationMessage For="@(() => usuario.Senha)" />
-    </div>
+                        <div class="mb-4">
+                            <label class="form-label fw-bold">Jogos de Interesse</label>
+                            @if (loadingJogos)
+                            {
+                                <div class="d-flex justify-content-center py-3">
+                                    <div class="spinner-border text-primary" role="status">
+                                        <span class="visually-hidden">Carregando...</span>
+                                    </div>
+                                </div>
+                            }
+                            else if (!jogosDisponiveis?.Any() ?? true)
+                            {
+                                <div class="alert alert-warning mb-0">Nenhum jogo disponível no momento</div>
+                            }
+                            else
+                            {
+                                <div class="border rounded p-3 bg-light" style="max-height: 200px; overflow-y: auto;">
+                                    @foreach (var jogo in jogosDisponiveis)
+                                    {
+                                        <div class="form-check mb-2">
+                                            <input type="checkbox" 
+                                                   id="@($"jogo-{jogo.Id}")" 
+                                                   class="form-check-input" 
+                                                   checked="@jogosSelecionados.Contains(jogo.Id)"
+                                                   @onchange="@(e => ToggleJogoSelecionado(jogo.Id, (bool)e.Value))" />
+                                            <label class="form-check-label" for="@($"jogo-{jogo.Id}")">
+                                                @jogo.Nome
+                                            </label>
+                                        </div>
+                                    }
+                                </div>
+                            }
+                        </div>
 
-    <div class="form-group mb-3">
-        <label class="form-label">Jogos de Interesse</label>
-        @if (jogosDisponiveis == null)
-        {
-            <div class="spinner-border text-primary" role="status">
-                <span class="visually-hidden">Carregando...</span>
+                        <div class="d-grid gap-2">
+                            <button type="submit" class="btn btn-primary py-2" disabled="@(isSubmitting || loadingJogos)">
+                                @if (isSubmitting)
+                                {
+                                    <span class="spinner-border spinner-border-sm me-2" role="status"></span>
+                                    <span>Cadastrando...</span>
+                                }
+                                else
+                                {
+                                    <span>Cadastrar</span>
+                                }
+                            </button>
+                            
+                            <a href="/login" class="btn btn-outline-secondary py-2">
+                                Já tem conta? Faça login
+                            </a>
+                        </div>
+                    </EditForm>
+                </div>
             </div>
-        }
-        else if (!jogosDisponiveis.Any())
-        {
-            <div class="alert alert-warning">Nenhum jogo disponível no momento</div>
-        }
-        else
-        {
-            <div class="jogos-container border rounded p-3" style="max-height: 200px; overflow-y: auto;">
-                @foreach (var jogo in jogosDisponiveis)
-                {
-                    <div class="form-check">
-                        <input type="checkbox" 
-                            id="@($"jogo-{jogo.Id}")" 
-                            class="form-check-input" 
-                            checked="@(jogosSelecionados.Contains(jogo.Id))"
-                            @onchange="@((e) => ToggleJogoSelecionado(jogo.Id, e.Value as bool? ?? false))" />
-                        <label class="form-check-label" for="@($"jogo-{jogo.Id}")">@jogo.Nome</label>
-                    </div>
-                }
-            </div>
-        }
+        </div>
     </div>
-
-    <button type="submit" class="btn btn-primary w-100 mt-3">Cadastrar</button>
-</EditForm>
+</div>
 
 @code {
     private UsuarioDto usuario = new();
-    private List<JogoDto> jogosDisponiveis = new();
+    private List<JogoDto>? jogosDisponiveis;
     private List<int> jogosSelecionados = new();
     private string errorMessage = string.Empty;
+    private bool loadingJogos = true;
+    private bool isSubmitting = false;
 
     protected override async Task OnInitializedAsync()
     {
-        await CarregarJogosDisponiveis();
+        try
+        {
+            var authState = await AuthStateProvider.GetAuthenticationStateAsync();
+            if (authState.User.Identity?.IsAuthenticated == true)
+            {
+                NavigationManager.NavigateTo("/");
+                return;
+            }
+
+            await CarregarJogosDisponiveis();
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Erro durante a inicialização da página de cadastro");
+            errorMessage = "Ocorreu um erro ao carregar a página. Tente recarregar.";
+        }
     }
 
     private async Task CarregarJogosDisponiveis()
     {
         try
         {
-            var response = await Http.GetAsync("api/competicoes/jogos");
+            loadingJogos = true;
+            StateHasChanged();
+
+            var httpClient = HttpClientFactory.CreateClient("ServerAPI");
+            var response = await httpClient.GetAsync("api/competicoes/jogos");
             
             if (response.IsSuccessStatusCode)
             {
-                var jogos = await response.Content.ReadFromJsonAsync<List<JogoDto>>();
-                jogosDisponiveis = jogos ?? new List<JogoDto>();
+                jogosDisponiveis = await response.Content.ReadFromJsonAsync<List<JogoDto>>();
+                Logger.LogInformation("Jogos carregados com sucesso. Total: {Count}", jogosDisponiveis?.Count ?? 0);
             }
             else
             {
-                errorMessage = $"Erro: {response.StatusCode}";
+                var errorContent = await response.Content.ReadAsStringAsync();
+                errorMessage = $"Erro ao carregar jogos: {response.StatusCode}";
+                Logger.LogError("Falha ao carregar jogos. Status: {StatusCode}, Resposta: {Error}", 
+                    response.StatusCode, errorContent);
             }
+        }
+        catch (HttpRequestException httpEx)
+        {
+            errorMessage = "Não foi possível conectar ao servidor. Verifique sua conexão.";
+            Logger.LogError(httpEx, "Erro de conexão ao carregar jogos");
         }
         catch (Exception ex)
         {
-            errorMessage = $"Erro ao carregar jogos: {ex.Message}";
+            errorMessage = "Ocorreu um erro inesperado ao carregar os jogos.";
+            Logger.LogError(ex, "Erro inesperado ao carregar jogos");
+        }
+        finally
+        {
+            loadingJogos = false;
+            StateHasChanged();
         }
     }
 
@@ -111,7 +183,10 @@
     {
         if (isSelected)
         {
-            jogosSelecionados.Add(jogoId);
+            if (!jogosSelecionados.Contains(jogoId))
+            {
+                jogosSelecionados.Add(jogoId);
+            }
         }
         else
         {
@@ -121,19 +196,32 @@
 
     private async Task HandleCadastro()
     {
+        isSubmitting = true;
         errorMessage = string.Empty;
+        StateHasChanged();
         
-        usuario.JogoDeInteresse = jogosSelecionados
-            .Select(id => new UsuarioJogoInteresseDto { JogoId = id })
-            .ToList();
-
         try
         {
-            var response = await Http.PostAsJsonAsync("api/usuario/cadastro", usuario);
+            var dadosCadastro = new UsuarioDto
+            {
+                Nome = usuario.Nome,
+                CPF = usuario.CPF,
+                Email = usuario.Email,
+                Senha = usuario.Senha,
+                JogoDeInteresse = jogosSelecionados
+                    .Select(id => new UsuarioJogoInteresseDto { JogoId = id })
+                    .ToList()
+            };
+
+            Logger.LogInformation("Iniciando cadastro para: {Email}", dadosCadastro.Email);
+            
+            var httpClient = HttpClientFactory.CreateClient("ServerAPI");
+            var response = await httpClient.PostAsJsonAsync("api/usuario/cadastro", dadosCadastro);
 
             if (response.IsSuccessStatusCode)
             {
-                NavigationManager.NavigateTo("/login");
+                Logger.LogInformation("Cadastro realizado com sucesso para: {Email}", dadosCadastro.Email);
+                NavigationManager.NavigateTo("/login", forceLoad: true);
             }
             else
             {
@@ -142,11 +230,24 @@
                 {
                     errorMessage = $"Erro no cadastro: {response.StatusCode}";
                 }
+                Logger.LogError("Falha no cadastro - Status: {StatusCode}, Mensagem: {ErrorMessage}", 
+                    response.StatusCode, errorMessage);
             }
+        }
+        catch (HttpRequestException httpEx)
+        {
+            errorMessage = "Erro de conexão com o servidor. Verifique sua internet.";
+            Logger.LogError(httpEx, "Erro HTTP durante o cadastro");
         }
         catch (Exception ex)
         {
-            errorMessage = $"Erro durante o cadastro: {ex.Message}";
+            errorMessage = "Ocorreu um erro inesperado durante o cadastro.";
+            Logger.LogError(ex, "Erro inesperado durante o cadastro");
+        }
+        finally
+        {
+            isSubmitting = false;
+            StateHasChanged();
         }
     }
 }

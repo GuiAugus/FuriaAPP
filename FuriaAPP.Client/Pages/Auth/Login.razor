@@ -2,63 +2,137 @@
 @using FuriaAPP.Shared.DTOs.Usuario
 @using System.Net.Http.Json
 @using Microsoft.AspNetCore.Components.Forms
-@inject HttpClient Http
+@using Blazored.LocalStorage
+@using Microsoft.AspNetCore.Components.Authorization
+@using FuriaAPP.Client.Services
+@inject IHttpClientFactory HttpClientFactory
 @inject NavigationManager NavigationManager
+@inject ILocalStorageService LocalStorage
+@inject AuthenticationStateProvider AuthStateProvider
+@inject ILogger<Login> Logger
 
-<h1 class="mb-4">Login</h1>
+<div class="login-container">
+    <div class="login-card">
+        <h1 class="mb-4 text-center">Login</h1>
 
-<EditForm Model="loginDto" OnValidSubmit="HandleLogin">
-    <DataAnnotationsValidator />
-    <ValidationSummary />
+        <EditForm Model="loginDto" OnValidSubmit="HandleLogin">
+            <DataAnnotationsValidator />
+            <ValidationSummary class="text-danger" />
 
-    <div class="form-group mb-3">
-        <label for="email" class="form-label">E-mail</label>
-        <InputText id="email" class="form-control" @bind-Value="loginDto.Email" />
-        <ValidationMessage For="@(() => loginDto.Email)" />
+            <div class="form-group mb-3">
+                <label for="email" class="form-label">E-mail</label>
+                <InputText id="email" class="form-control" @bind-Value="loginDto.Email" />
+                <ValidationMessage For="@(() => loginDto.Email)" class="text-danger" />
+            </div>
+
+            <div class="form-group mb-3">
+                <label for="senha" class="form-label">Senha</label>
+                <InputText id="senha" type="password" class="form-control" @bind-Value="loginDto.Senha" />
+                <ValidationMessage For="@(() => loginDto.Senha)" class="text-danger" />
+            </div>
+
+            <button type="submit" class="btn btn-primary w-100 mt-3" disabled="@isLoading">
+                @if (isLoading)
+                {
+                    <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                    <span class="visually-hidden">Carregando...</span>
+                }
+                else
+                {
+                    <span>Entrar</span>
+                }
+            </button>
+        </EditForm>
+
+        @if (!string.IsNullOrEmpty(errorMessage))
+        {
+            <div class="alert alert-danger mt-3">@errorMessage</div>
+        }
+
+        <div class="mt-3 text-center">
+            <a href="/cadastro" class="text-muted">Não tem uma conta? Cadastre-se</a>
+        </div>
     </div>
-
-    <div class="form-group mb-3">
-        <label for="senha" class="form-label">Senha</label>
-        <InputText id="senha" type="password" class="form-control" @bind-Value="loginDto.Senha" />
-        <ValidationMessage For="@(() => loginDto.Senha)" />
-    </div>
-
-    <button type="submit" class="btn btn-primary w-100">Login</button>
-</EditForm>
-
-@if (!string.IsNullOrEmpty(errorMessage))
-{
-    <div class="alert alert-danger mt-3">@errorMessage</div>
-}
+</div>
 
 @code {
     private LoginDto loginDto = new();
     private string errorMessage = string.Empty;
+    private bool isLoading = false;
 
-    private async Task HandleLogin()
+    protected override async Task OnInitializedAsync()
     {
-        errorMessage = string.Empty;
-        
         try
         {
-            var response = await Http.PostAsJsonAsync("api/usuario/login", loginDto);
-
-            if (response.IsSuccessStatusCode)
+            var authState = await AuthStateProvider.GetAuthenticationStateAsync();
+            if (authState.User.Identity?.IsAuthenticated == true)
             {
-                NavigationManager.NavigateTo("/home");
-            }
-            else
-            {
-                errorMessage = await response.Content.ReadAsStringAsync();
-                if (string.IsNullOrWhiteSpace(errorMessage))
-                {
-                    errorMessage = "Erro ao tentar fazer login. Por favor, tente novamente.";
-                }
+                NavigationManager.NavigateTo("/");
             }
         }
         catch (Exception ex)
         {
-            errorMessage = $"Erro durante o login: {ex.Message}";
+            Logger.LogError(ex, "Erro ao verificar autenticação inicial");
         }
+    }
+
+    private async Task HandleLogin()
+    {
+        errorMessage = string.Empty;
+        isLoading = true;
+        
+        try
+        {
+            var httpClient = HttpClientFactory.CreateClient("ServerAPI");
+            var response = await httpClient.PostAsJsonAsync("api/usuario/login", loginDto);
+
+            if (response.IsSuccessStatusCode)
+            {
+                var authResponse = await response.Content.ReadFromJsonAsync<AuthResponse>();
+                
+                if (authResponse != null && !string.IsNullOrEmpty(authResponse.Token))
+                {
+                    var customAuthProvider = (CustomAuthStateProvider)AuthStateProvider;
+                    await customAuthProvider.NotifyUserAuthentication(authResponse.Token, authResponse.Usuario);
+                    NavigationManager.NavigateTo("/", forceLoad: true);
+                }
+                else
+                {
+                    errorMessage = "Resposta de autenticação inválida. Tente novamente.";
+                    Logger.LogWarning("Resposta de autenticação inválida recebida");
+                }
+            }
+            else
+            {
+                var errorContent = await response.Content.ReadAsStringAsync();
+                errorMessage = !string.IsNullOrWhiteSpace(errorContent) 
+                    ? errorContent 
+                    : "Credenciais inválidas ou erro no servidor";
+                
+                Logger.LogWarning("Falha no login - Status: {StatusCode}, Mensagem: {ErrorMessage}", 
+                    response.StatusCode, errorMessage);
+            }
+        }
+        catch (HttpRequestException ex)
+        {
+            errorMessage = "Erro ao conectar com o servidor. Verifique sua conexão e tente novamente.";
+            Logger.LogError(ex, "Erro HTTP durante o login");
+        }
+        catch (Exception ex)
+        {
+            errorMessage = "Ocorreu um erro inesperado durante o login.";
+            Logger.LogError(ex, "Erro inesperado durante o login");
+        }
+        finally
+        {
+            isLoading = false;
+            StateHasChanged();
+        }
+    }
+
+    private class AuthResponse
+    {
+        public string Token { get; set; } = string.Empty;
+        public UsuarioDto Usuario { get; set; } = new();
     }
 }

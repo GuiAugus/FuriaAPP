@@ -1,6 +1,15 @@
-﻿<div class="top-row ps-3 navbar navbar-dark">
+﻿@using Microsoft.AspNetCore.Components.Authorization
+@using Blazored.LocalStorage
+@using FuriaAPP.Client.Services
+@inject AuthenticationStateProvider AuthenticationStateProvider
+@inject NavigationManager NavigationManager
+@inject ILocalStorageService localStorage
+@inject ILogger<NavMenu> Logger
+@implements IDisposable
+
+<div class="top-row ps-3 navbar navbar-dark">
     <div class="container-fluid">
-        <a class="navbar-brand" href="">FuriaAPP.Client</a>
+        <a class="navbar-brand" href="">FuriaAPP</a>
         <button title="Navigation menu" class="navbar-toggler" @onclick="ToggleNavMenu">
             <span class="navbar-toggler-icon"></span>
         </button>
@@ -11,29 +20,127 @@
     <nav class="nav flex-column">
         <div class="nav-item px-3">
             <NavLink class="nav-link" href="" Match="NavLinkMatch.All">
-                <span class="bi bi-house-door-fill-nav-menu" aria-hidden="true"></span> Home
+                <span class="bi bi-house-door-fill" aria-hidden="true"></span> Home
             </NavLink>
         </div>
-        <div class="nav-item px-3">
-            <NavLink class="nav-link" href="/login">
-                <span class="bi bi-plus-square-fill-nav-menu" aria-hidden="true"></span> login
-            </NavLink>
-        </div>
-        <div class="nav-item px-3">
-            <NavLink class="nav-link" href="/cadastro">
-                <span class="bi bi-plus-square-fill-nav-menu" aria-hidden="true"></span> cadastro
-            </NavLink>
-        </div>        
+        
+        @if (isAuthenticated)
+        {
+            <div class="nav-item px-3">
+                <NavLink class="nav-link" href="/noticias">
+                    <span class="bi bi-speedometer2" aria-hidden="true"></span> Noticias
+                </NavLink>
+            </div>
+            <div class="nav-item px-3">
+                <button class="nav-link btn btn-link text-start p-0 border-0" @onclick="Logout" disabled="@isLoggingOut">
+                    @if (isLoggingOut)
+                    {
+                        <span class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span>
+                        <span>Saindo...</span>
+                    }
+                    else
+                    {
+                        <span class="bi bi-box-arrow-right me-1" aria-hidden="true"></span>
+                        <span>Sair</span>
+                    }
+                </button>
+            </div>
+        }
+        else
+        {
+            <div class="nav-item px-3">
+                <NavLink class="nav-link" href="/login">
+                    <span class="bi bi-box-arrow-in-right" aria-hidden="true"></span> Login
+                </NavLink>
+            </div>
+            <div class="nav-item px-3">
+                <NavLink class="nav-link" href="/cadastro">
+                    <span class="bi bi-person-plus" aria-hidden="true"></span> Cadastrar
+                </NavLink>
+            </div>
+        }
     </nav>
 </div>
 
 @code {
     private bool collapseNavMenu = true;
-
+    private bool isAuthenticated = false;
+    private bool isLoggingOut = false;
     private string? NavMenuCssClass => collapseNavMenu ? "collapse" : null;
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            await UpdateAuthenticationState();
+            AuthenticationStateProvider.AuthenticationStateChanged += OnAuthenticationStateChanged;
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Erro ao inicializar NavMenu");
+        }
+    }
+
+    private async void OnAuthenticationStateChanged(Task<AuthenticationState> task)
+    {
+        try
+        {
+            await UpdateAuthenticationState();
+            StateHasChanged();
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Erro ao atualizar estado de autenticação");
+        }
+    }
+
+    private async Task UpdateAuthenticationState()
+    {
+        var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        isAuthenticated = authState.User.Identity?.IsAuthenticated ?? false;
+    }
 
     private void ToggleNavMenu()
     {
         collapseNavMenu = !collapseNavMenu;
+    }
+
+    private async Task Logout()
+    {
+        if (isLoggingOut) return;
+        
+        isLoggingOut = true;
+        
+        try
+        {
+            await localStorage.RemoveItemAsync("authToken");
+            await localStorage.RemoveItemAsync("usuario");
+            
+            if (AuthenticationStateProvider is CustomAuthStateProvider authProvider)
+            {
+                await authProvider.NotifyUserLogout();
+            }
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Erro durante o logout");
+        }
+        finally
+        {
+            isLoggingOut = false;
+            NavigationManager.NavigateTo("/login", forceLoad: true);
+        }
+    }
+
+    public void Dispose()
+    {
+        try
+        {
+            AuthenticationStateProvider.AuthenticationStateChanged -= OnAuthenticationStateChanged;
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Erro ao desinscrever eventos");
+        }
     }
 }
