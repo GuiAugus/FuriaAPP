@@ -64,8 +64,8 @@ namespace FuriaAPP.API.Controllers
             if (!ModelState.IsValid)
                 return BadRequest(ModelState);
 
-            var campeonato = await _context.Campeonatos.FindAsync(dto.CampeonatoId);
-            if (campeonato == null)
+            bool campeonatoExiste = await _context.Campeonatos.AnyAsync(c => c.Id == dto.CampeonatoId);
+            if (!campeonatoExiste)
                 return BadRequest("Campeonato não encontrado.");
 
             if (dto.DataFim.HasValue && dto.DataFim.Value < dto.DataInicio)
@@ -80,11 +80,18 @@ namespace FuriaAPP.API.Controllers
                 Tipo = dto.Tipo
             };
 
-            _context.Temporadas.Add(temporada);
-            await _context.SaveChangesAsync();
+            try
+            {
+                _context.Temporadas.Add(temporada);
+                await _context.SaveChangesAsync();
+            }
+            catch (DbUpdateException ex)
+            {
+                Console.WriteLine($"Erro ao salvar temporada : {ex.InnerException?.Message}");
+                return BadRequest("Erro ao criar a temporada. verifique os dados");
+            }
 
             dto.Id = temporada.Id;
-
             return CreatedAtAction(nameof(GetTemporada), new { id = dto.Id }, dto);
         }
 

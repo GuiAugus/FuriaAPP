@@ -25,6 +25,5 @@ namespace FuriaAPP.API.Data
             modelBuilder.Entity<UsuarioJogoInteresse>()
                 .HasKey(uj => new { uj.UsuarioId, uj.JogoId });
         }
-
     }
 }
