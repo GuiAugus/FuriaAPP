@@ -29,10 +29,6 @@
             {
                 <span>Jogos de interesse: @string.Join(", ", jogosInteresse.Select(j => j.NomeJogo))</span>
             }
-            else
-            {
-                <span>Você não tem jogos de interesse configurados</span>
-            }
         </div>
     }
     else
@@ -88,14 +84,21 @@
         {
             var authState = await AuthStateProvider.GetAuthenticationStateAsync();
             var user = authState.User;
-            
+
             if (user.Identity?.IsAuthenticated ?? false)
             {
                 var jogosInteresseClaim = user.FindFirst("jogos_interesse")?.Value;
-                
+
                 if (!string.IsNullOrEmpty(jogosInteresseClaim))
                 {
-                    jogosInteresse = JsonSerializer.Deserialize<List<UsuarioJogoInteresseDto>>(jogosInteresseClaim) ?? new();
+                    try
+                    {
+                        jogosInteresse = JsonSerializer.Deserialize<List<UsuarioJogoInteresseDto>>(jogosInteresseClaim) ?? new();
+                    }
+                    catch (JsonException jsonEx)
+                    {
+                        Console.WriteLine($"Erro ao desserializar jogos de interesse: {jsonEx.Message}");
+                    }
                 }
             }
         }
@@ -111,25 +114,27 @@
         {
             var httpClient = HttpClientFactory.CreateClient("ServerAPI");
             var response = await httpClient.GetAsync("api/noticia");
-            
+
             if (response.IsSuccessStatusCode)
             {
                 var todasNoticias = await response.Content.ReadFromJsonAsync<List<NoticiaDto>>();
-                
-                if (jogosInteresse.Any())
+
+                if (jogosInteresse.Any() && jogosInteresse.Any(j => j.JogoId > 0))
                 {
+                    var idsJogosInteresse = jogosInteresse
+                        .Where(j => j.JogoId > 0)
+                        .Select(j => j.JogoId)
+                        .Distinct()
+                        .ToList();
+
                     noticias = todasNoticias?
+                        .Where(n => n.JogoId.HasValue && idsJogosInteresse.Contains(n.JogoId.Value))
                         .OrderByDescending(n => n.DataPublicacao)
                         .ToList() ?? new();
                 }
                 else
                 {
-                    var idsJogosInteresse = jogosInteresse.Select(j => j.JogoId).ToList();
-                    
-                    noticias = todasNoticias?
-                        .Where(n => n.JogoId.HasValue && idsJogosInteresse.Contains(n.JogoId.Value))
-                        .OrderByDescending(n => n.DataPublicacao)
-                        .ToList() ?? new();
+                    noticias = new List<NoticiaDto>();
                 }
             }
         }
