@@ -45,10 +45,10 @@ else
                         </a>
                         <h6 class="card-subtitle mb-2 text-muted">
                             @noticia.DataPublicacao.ToString("dd/MM/yyyy HH:mm")
-                            @if (noticia.JogoId.HasValue && jogosInteresse.Any(j => j.JogoId == noticia.JogoId.Value))
+                            @if (noticia.JogoId.HasValue)
                             {
                                 <span class="badge bg-primary ms-2">
-                                    @jogosInteresse.First(j => j.JogoId == noticia.JogoId.Value).NomeJogo
+                                    @noticia.NomeJogo
                                 </span>
                             }
                         </h6>
@@ -71,8 +71,14 @@ else
 
     protected override async Task OnInitializedAsync()
     {
+        await CarregarDados();
+    }
+
+    private async Task CarregarDados()
+    {
         await CarregarDadosUsuario();
         await CarregarNoticias();
+        StateHasChanged();
     }
 
     private async Task CarregarDadosUsuario()
@@ -85,25 +91,14 @@ else
             if (user.Identity?.IsAuthenticated ?? false)
             {
                 var userId = user.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-                var userEmail = user.FindFirst(ClaimTypes.Email)?.Value;
                 
-                var jogosClaim = user.FindFirst("jogos_interesse")?.Value;
+                var httpClient = HttpClientFactory.CreateClient("ServerAPI");
+                var response = await httpClient.GetAsync($"api/usuario/{userId}");
                 
-                if (!string.IsNullOrEmpty(jogosClaim))
+                if (response.IsSuccessStatusCode)
                 {
-                    jogosInteresse = JsonSerializer.Deserialize<List<UsuarioJogoInteresseDto>>(jogosClaim) ?? new();
-                }
-                else
-                {
-                    var httpClient = HttpClientFactory.CreateClient("ServerAPI");
-                    var response = await httpClient.GetAsync("api/usuario");
-                    
-                    if (response.IsSuccessStatusCode)
-                    {
-                        var todosUsuarios = await response.Content.ReadFromJsonAsync<List<UsuarioDto>>();
-                        var usuarioLogado = todosUsuarios?.FirstOrDefault(u => u.Id.ToString() == userId);
-                        jogosInteresse = usuarioLogado?.JogoDeInteresse ?? new();
-                    }
+                    var usuario = await response.Content.ReadFromJsonAsync<UsuarioDto>();
+                    jogosInteresse = usuario?.JogoDeInteresse ?? new();
                 }
             }
         }
@@ -122,18 +117,23 @@ else
             
             if (response.IsSuccessStatusCode)
             {
-                var todasNoticias = await response.Content.ReadFromJsonAsync<List<NoticiaDto>>() ?? new();
+                var todasNoticias = await response.Content.ReadFromJsonAsync<List<NoticiaDto>>();
                 
-                // Filtra notícias que pertencem aos jogos de interesse OU notícias gerais (sem jogo específico)
-                noticias = todasNoticias
-                    .Where(n => !n.JogoId.HasValue || jogosInteresse.Any(j => j.JogoId == n.JogoId.Value))
+                noticias = todasNoticias?
                     .OrderByDescending(n => n.DataPublicacao)
-                    .ToList();
+                    .ToList() ?? new();
+                
+                Console.WriteLine($"Notícias carregadas: {noticias.Count}");
+            }
+            else
+            {
+                Console.WriteLine($"Erro na API: {response.StatusCode}");
+                noticias = new List<NoticiaDto>();
             }
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"Erro ao carregar notícias: {ex.Message}");
+            Console.WriteLine($"Erro ao carregar notícias: {ex.ToString()}");
             noticias = new List<NoticiaDto>();
         }
     }

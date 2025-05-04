@@ -1,8 +1,12 @@
 @page "/noticia/{id:int}"
 @using FuriaAPP.Shared.DTOs.Usuario
 @using System.Net.Http.Json
-@inject HttpClient Http
+@using Microsoft.AspNetCore.Components.Authorization
+@using System.Security.Claims
+@using System.Text.Json
+@inject IHttpClientFactory HttpClientFactory
 @inject NavigationManager NavigationManager
+@inject AuthenticationStateProvider AuthStateProvider
 
 @if (noticia == null)
 {
@@ -24,9 +28,15 @@ else
                 <h1>@noticia.Titulo</h1>
                 <div class="text-muted mb-3">
                     Publicado em: @noticia.DataPublicacao.ToString("dd/MM/yyyy HH:mm")
-                    @if (noticia.JogoId.HasValue)
+                    @if (noticia.JogoId.HasValue && jogosInteresse.Any(j => j.JogoId == noticia.JogoId.Value))
                     {
-                        <span class="badge bg-primary ms-2">Jogo ID: @noticia.JogoId</span>
+                        <span class="badge bg-primary ms-2">
+                            @jogosInteresse.First(j => j.JogoId == noticia.JogoId.Value).NomeJogo
+                        </span>
+                    }
+                    else if (noticia.JogoId.HasValue)
+                    {
+                        <span class="badge bg-secondary ms-2">Jogo ID: @noticia.JogoId</span>
                     }
                 </div>
                 @if (noticia.CampeonatoId.HasValue)
@@ -37,7 +47,7 @@ else
                 }
             </header>
             
-            <div class="noticia-conteudo">
+            <div class="noticia-conteudo mb-4">
                 @if (!string.IsNullOrEmpty(noticia.Conteudo))
                 {
                     var conteudoComQuebras = noticia.Conteudo.Replace("\n", "<br />");
@@ -60,13 +70,72 @@ else
     public int Id { get; set; }
 
     private NoticiaDto? noticia;
+    private List<UsuarioJogoInteresseDto> jogosInteresse = new();
 
-    protected override async Task OnParametersSetAsync()
+    protected override async Task OnInitializedAsync()
     {
-        var response = await Http.GetAsync($"api/noticia/{Id}");
-        if (response.IsSuccessStatusCode)
+        await CarregarDadosUsuario();
+        await CarregarNoticia();
+    }
+
+    private async Task CarregarDadosUsuario()
+    {
+        try
         {
-            noticia = await response.Content.ReadFromJsonAsync<NoticiaDto>();
+            var authState = await AuthStateProvider.GetAuthenticationStateAsync();
+            var user = authState.User;
+            
+            if (user.Identity?.IsAuthenticated ?? false)
+            {
+                var userId = user.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+                var userEmail = user.FindFirst(ClaimTypes.Email)?.Value;
+                
+                var jogosClaim = user.FindFirst("jogos_interesse")?.Value;
+                
+                if (!string.IsNullOrEmpty(jogosClaim))
+                {
+                    jogosInteresse = JsonSerializer.Deserialize<List<UsuarioJogoInteresseDto>>(jogosClaim) ?? new();
+                }
+                else
+                {
+                    var httpClient = HttpClientFactory.CreateClient("ServerAPI");
+                    var response = await httpClient.GetAsync("api/usuario");
+                    
+                    if (response.IsSuccessStatusCode)
+                    {
+                        var todosUsuarios = await response.Content.ReadFromJsonAsync<List<UsuarioDto>>();
+                        var usuarioLogado = todosUsuarios?.FirstOrDefault(u => u.Id.ToString() == userId);
+                        jogosInteresse = usuarioLogado?.JogoDeInteresse ?? new();
+                    }
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Erro ao carregar dados do usuário: {ex.Message}");
+        }
+    }
+
+    private async Task CarregarNoticia()
+    {
+        try
+        {
+            var httpClient = HttpClientFactory.CreateClient("ServerAPI");
+            var response = await httpClient.GetAsync($"api/noticia/{Id}");
+            
+            if (response.IsSuccessStatusCode)
+            {
+                noticia = await response.Content.ReadFromJsonAsync<NoticiaDto>();
+            }
+            else
+            {
+                NavigationManager.NavigateTo("/noticias");
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Erro ao carregar notícia: {ex.Message}");
+            NavigationManager.NavigateTo("/noticias");
         }
     }
 
