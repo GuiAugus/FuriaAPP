@@ -1,0 +1,183 @@
+@import url(../style.css);
+
+.login-container {
+    width: 100%;
+    max-width: 420px;
+    padding: 20px;
+    margin: 0 auto;
+}
+
+.login-card {
+    background: var(--cor2);
+    border-radius: 8px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    padding: 2rem;
+    transition: all 0.3s ease;
+}
+
+.login-card:hover {
+    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+}
+
+.login-titulo {
+    color: var(--cor1);
+    font-weight: 600;
+    margin-bottom: 1.5rem;
+    font-size: 2rem;
+    text-align: center;
+}
+
+.login-campo {
+    position: relative;
+    margin-bottom: 1.5rem;
+}
+
+.login-input {
+    width: 100%;
+    padding: 0.75rem 1rem;
+    font-size: 1rem;
+    border: 1px solid var(--cor1);
+    border-radius: 8px;
+    transition: all 0.3s ease;
+    box-sizing: border-box;
+    background-color: var(--cor2);
+}
+
+.login-input:focus {
+    outline: none;
+    border-color: var(--cor3);
+    box-shadow: 0 0 0 3px rgba(67, 97, 238, 0.2);
+    background-color: var(--cor3);
+}
+
+.login-rotulo {
+    position: absolute;
+    left: 1rem;
+    top: 0.75rem;
+    color: var(--cor1);
+    transition: all 0.3s ease;
+    pointer-events: none;
+    background-color: var(--cor2);
+    padding: 0 0.25rem;
+}
+
+.login-input:focus + .login-rotulo,
+.login-input:not(:placeholder-shown) + .login-rotulo {
+    transform: translateY(-1.25rem) scale(0.85);
+    color: var(--cor1);
+    background-color: var(--cor2);
+}
+
+.login-botoes {
+    display: grid;
+    gap: 1rem;
+    margin-top: 1.5rem;
+}
+
+.login-botoes--secundarios {
+    margin-top: 1rem;
+    display: grid;
+    gap: 1rem;
+}
+
+.login-botao {
+    width: 100%;
+    padding: 0.75rem;
+    border-radius: 8px;
+    font-size: 1rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    text-align: center;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 0.5rem;
+    box-sizing: border-box;
+    height: 44px;
+    line-height: 1;
+}
+
+.login-botao--primario {
+    background-color: var(--cor1);
+    color: white;
+    border: none;
+}
+
+.login-botao--primario:hover {
+    background-color: var(--cor3);
+    transform: translateY(-2px);
+}
+
+.login-botao--secundario {
+    background-color: transparent;
+    color: var(--cor1);
+    border: 1px solid var(--cor1);
+    text-decoration: none;
+    padding: 0.75rem; 
+    line-height: calc(1rem - 2px); 
+}
+
+.login-botao--secundario:hover {
+    background-color: var(--cor3);
+    transform: translateY(-2px);
+}
+
+.login-botao:disabled {
+    background-color: var(--cor1);
+    cursor: not-allowed;
+    transform: none;
+    opacity: 0.7;
+}
+
+.login-spinner {
+    width: 1rem;
+    height: 1rem;
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    border-radius: 50%;
+    border-top-color: white;
+    animation: spin 1s ease-in-out infinite;
+}
+
+.login-spinner--pequeno {
+    margin-right: 0.5rem;
+}
+
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}
+
+.login-alerta {
+    padding: 0.75rem;
+    border-radius: 8px;
+    text-align: center;
+    font-size: 0.875rem;
+    margin-bottom: 1rem;
+}
+
+.login-alerta--erro {
+    color: #f72585;
+    background-color: rgba(247, 37, 133, 0.1);
+}
+
+.login-mensagem-erro {
+    color: #f72585;
+    font-size: 0.875rem;
+    margin-top: 0.25rem;
+    display: block;
+}
+
+@media (max-width: 576px) {
+    .login-container {
+        padding: 1rem;
+    }
+    
+    .login-card {
+        padding: 1.5rem;
+    }
+    
+    .login-botoes, 
+    .login-botoes--secundarios {
+        gap: 0.75rem;
+    }
+}

@@ -3,6 +3,7 @@
 @using FuriaAPP.Shared.DTOs.Jogo
 @using System.Net.Http.Json
 @using Microsoft.AspNetCore.Components.Forms
+@using Microsoft.AspNetCore.Components
 @using Microsoft.AspNetCore.Components.Authorization
 @using Blazored.LocalStorage
 @inject IHttpClientFactory HttpClientFactory
@@ -11,106 +12,104 @@
 @inject AuthenticationStateProvider AuthStateProvider
 @inject ILogger<Cadastro> Logger
 
-<div class="container mt-5">
-    <div class="row justify-content-center">
-        <div class="col-md-8 col-lg-6">
-            <div class="card shadow">
-                <div class="card-header bg-primary text-white">
-                    <h1 class="h4 mb-0">Cadastro de Usuário</h1>
-                </div>
-                
-                <div class="card-body">
-                    @if (!string.IsNullOrEmpty(errorMessage))
-                    {
-                        <div class="alert alert-danger mb-4">@errorMessage</div>
-                    }
+<PageTitle>Cadastro</PageTitle>
 
-                    <EditForm Model="usuario" OnValidSubmit="HandleCadastro">
-                        <DataAnnotationsValidator />
-                        <ValidationSummary class="alert alert-danger" />
 
-                        <div class="form-floating mb-3">
-                            <InputText id="nome" class="form-control" @bind-Value="usuario.Nome" placeholder=" " />
-                            <label for="nome">Nome Completo</label>
-                            <ValidationMessage For="@(() => usuario.Nome)" class="text-danger small" />
-                        </div>
+<div class="cadastro-container">
 
-                        <div class="form-floating mb-3">
-                            <InputText id="cpf" class="form-control" @bind-Value="usuario.CPF" placeholder=" " />
-                            <label for="cpf">CPF</label>
-                            <ValidationMessage For="@(() => usuario.CPF)" class="text-danger small" />
-                        </div>
+    <div class="cadastro-card">
 
-                        <div class="form-floating mb-3">
-                            <InputText id="email" class="form-control" @bind-Value="usuario.Email" placeholder=" " />
-                            <label for="email">E-mail</label>
-                            <ValidationMessage For="@(() => usuario.Email)" class="text-danger small" />
-                        </div>
+    <h1 class="cadastro-titulo">Cadastro de Usuário</h1>
+    
+        @if (!string.IsNullOrEmpty(errorMessage))
+        {
+            <div class="cadastro-alerta cadastro-alerta--erro">@errorMessage</div>
+        }
 
-                        <div class="form-floating mb-3">
-                            <InputText id="senha" type="password" class="form-control" @bind-Value="usuario.Senha" placeholder=" " />
-                            <label for="senha">Senha</label>
-                            <ValidationMessage For="@(() => usuario.Senha)" class="text-danger small" />
-                        </div>
+        <EditForm Model="usuario" OnValidSubmit="HandleCadastro">
+            <DataAnnotationsValidator />
+            <ValidationSummary class="cadastro-alerta cadastro-alerta--erro" />
 
-                        <div class="mb-4">
-                            <label class="form-label fw-bold">Jogos de Interesse</label>
-                            @if (loadingJogos)
-                            {
-                                <div class="d-flex justify-content-center py-3">
-                                    <div class="spinner-border text-primary" role="status">
-                                        <span class="visually-hidden">Carregando...</span>
-                                    </div>
-                                </div>
-                            }
-                            else if (!jogosDisponiveis?.Any() ?? true)
-                            {
-                                <div class="alert alert-warning mb-0">Nenhum jogo disponível no momento</div>
-                            }
-                            else
-                            {
-                                <div class="border rounded p-3 bg-light" style="max-height: 200px; overflow-y: auto;">
-                                    @if (jogosDisponiveis != null)
-                                    {
-                                        @foreach (var jogo in jogosDisponiveis)
-                                        {
-                                            <div class="form-check mb-2">
-                                                <input type="checkbox" 
-                                                    id="@($"jogo-{jogo.Id}")" 
-                                                    class="form-check-input" 
-                                                    checked="@jogosSelecionados.Contains(jogo.Id)"
-                                                        @onchange="@(e => ToggleJogoSelecionado(jogo.Id, e.Value))" />
-                                                <label class="form-check-label" for="@($"jogo-{jogo.Id}")">
-                                                    @jogo.Nome
-                                                </label>
-                                            </div>
-                                        }
-                                    }
-                                </div>
-                            }
-                        </div>
-
-                        <div class="d-grid gap-2">
-                            <button type="submit" class="btn btn-primary py-2" disabled="@(isSubmitting || loadingJogos)">
-                                @if (isSubmitting)
-                                {
-                                    <span class="spinner-border spinner-border-sm me-2" role="status"></span>
-                                    <span>Cadastrando...</span>
-                                }
-                                else
-                                {
-                                    <span>Cadastrar</span>
-                                }
-                            </button>
-                            
-                            <a href="/login" class="btn btn-outline-secondary py-2">
-                                Já tem conta? Faça login
-                            </a>
-                        </div>
-                    </EditForm>
-                </div>
+            <div class="cadastro-campo">
+                <InputText id="nome" class="cadastro-input" @bind-Value="usuario.Nome" placeholder=" " />
+                <label for="nome" class="cadastro-rotulo">Nome Completo</label>
+                <ValidationMessage For="@(() => usuario.Nome)" class="cadastro-mensagem-erro" />
             </div>
-        </div>
+
+            <div class="cadastro-campo">
+                <InputText id="cpf" class="cadastro-input" @bind-Value="usuario.CPF" placeholder=" " />
+                <label for="cpf" class="cadastro-rotulo">CPF</label>
+                <ValidationMessage For="@(() => usuario.CPF)" class="cadastro-mensagem-erro" />
+            </div>
+
+            <div class="cadastro-campo">
+                <InputText id="email" class="cadastro-input" @bind-Value="usuario.Email" placeholder=" " />
+                <label for="email" class="cadastro-rotulo">E-mail</label>
+                <ValidationMessage For="@(() => usuario.Email)" class="cadastro-mensagem-erro" />
+            </div>
+
+            <div class="cadastro-campo">
+                <InputText id="senha" type="password" class="cadastro-input" @bind-Value="usuario.Senha" placeholder=" " />
+                <label for="senha" class="cadastro-rotulo">Senha</label>
+                <ValidationMessage For="@(() => usuario.Senha)" class="cadastro-mensagem-erro" />
+            </div>
+
+            <div class="cadastro-jogos-container">
+                <label class="cadastro-rotulo cadastro-rotulo--destaque">Jogos de Interesse</label>
+                
+                @if (loadingJogos)
+                {
+                    <div class="cadastro-carregando">
+                        <div class="cadastro-spinner" role="status">
+                            <span class="cadastro-texto-oculto">Carregando...</span>
+                        </div>
+                    </div>
+                }
+                else if (!jogosDisponiveis?.Any() ?? true)
+                {
+                    <div class="cadastro-alerta cadastro-alerta--aviso">Nenhum jogo disponível no momento</div>
+                }
+                else
+                {
+                    <div class="cadastro-lista-jogos">
+                        @if (jogosDisponiveis != null)
+                        {
+                            @foreach (var jogo in jogosDisponiveis)
+                            {
+                                <div class="cadastro-item-jogo">
+                                    <input type="checkbox" 
+                                        id="@($"jogo-{jogo.Id}")" 
+                                        class="cadastro-checkbox" 
+                                        checked="@jogosSelecionados.Contains(jogo.Id)"
+                                        @onchange="@(e => ToggleJogoSelecionado(jogo.Id, e.Value))" />
+                                    <label class="cadastro-rotulo-checkbox" for="@($"jogo-{jogo.Id}")">
+                                        @jogo.Nome
+                                    </label>
+                                </div>
+                            }
+                        }
+                    </div>
+                }
+            </div>
+
+            <div class="cadastro-botoes">
+                <button type="submit" class="cadastro-botao cadastro-botao--primario" disabled="@(isSubmitting || loadingJogos)">
+                    @if (isSubmitting)
+                    {
+                        <span class="cadastro-spinner cadastro-spinner--pequeno"></span>
+                        <span>Cadastrando...</span>
+                    }
+                    else
+                    {
+                        <span>Cadastrar</span>
+                    }
+                </button>
+                
+                <a href="/login" class="cadastro-botao cadastro-botao--secundario">
+                    Já tem conta? Faça login
+                </a>
+            </div>
+        </EditForm>
     </div>
 </div>
 

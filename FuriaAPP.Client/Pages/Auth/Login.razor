@@ -11,31 +11,33 @@
 @inject AuthenticationStateProvider AuthStateProvider
 @inject ILogger<Login> Logger
 
+<PageTitle>Login</PageTitle>
+
 <div class="login-container">
     <div class="login-card">
-        <h1 class="mb-4 text-center">Login</h1>
+        <h1 class="login-titulo">Login</h1>
 
         <EditForm Model="loginDto" OnValidSubmit="HandleLogin">
             <DataAnnotationsValidator />
-            <ValidationSummary class="text-danger" />
+            <ValidationSummary class="login-alerta login-alerta--erro" />
 
-            <div class="form-group mb-3">
-                <label for="email" class="form-label">E-mail</label>
-                <InputText id="email" class="form-control" @bind-Value="loginDto.Email" />
-                <ValidationMessage For="@(() => loginDto.Email)" class="text-danger" />
+            <div class="login-campo">
+                <InputText id="email" class="login-input" @bind-Value="loginDto.Email" placeholder=" " />
+                <label for="email" class="login-rotulo">E-mail</label>
+                <ValidationMessage For="@(() => loginDto.Email)" class="login-mensagem-erro" />
             </div>
 
-            <div class="form-group mb-3">
-                <label for="senha" class="form-label">Senha</label>
-                <InputText id="senha" type="password" class="form-control" @bind-Value="loginDto.Senha" />
-                <ValidationMessage For="@(() => loginDto.Senha)" class="text-danger" />
+            <div class="login-campo">
+                <InputText id="senha" type="password" class="login-input" @bind-Value="loginDto.Senha" placeholder=" " />
+                <label for="senha" class="login-rotulo">Senha</label>
+                <ValidationMessage For="@(() => loginDto.Senha)" class="login-mensagem-erro" />
             </div>
 
-            <button type="submit" class="btn btn-primary w-100 mt-3" disabled="@isLoading">
+            <button type="submit" class="login-botao login-botao--primario" disabled="@isLoading">
                 @if (isLoading)
                 {
-                    <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
-                    <span class="visually-hidden">Carregando...</span>
+                    <span class="login-spinner login-spinner--pequeno"></span>
+                    <span>Carregando...</span>
                 }
                 else
                 {
@@ -46,11 +48,13 @@
 
         @if (!string.IsNullOrEmpty(errorMessage))
         {
-            <div class="alert alert-danger mt-3">@errorMessage</div>
+            <div class="login-alerta login-alerta--erro">@errorMessage</div>
         }
 
-        <div class="mt-3 text-center">
-            <a href="/cadastro" class="text-muted">Não tem uma conta? Cadastre-se</a>
+        <div class="login-botoes login-botoes--secundarios">
+            <a href="/cadastro" class="login-botao login-botao--secundario">
+                Não tem uma conta? Cadastre-se
+            </a>
         </div>
     </div>
 </div>

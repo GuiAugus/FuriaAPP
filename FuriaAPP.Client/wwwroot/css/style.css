@@ -1,6 +1,8 @@
 @import url(reset.css);
 @import url(shared/navmenu.css);
 @import url(shared/footer.css);
+@import url(auth/login.css);
+@import url(auth/cadastro.css);
 
 :root {
     --cor1: black;
