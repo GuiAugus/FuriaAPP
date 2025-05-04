@@ -1,0 +1,9 @@
+@import url(reset.css);
+@import url(shared/navmenu.css);
+@import url(shared/footer.css);
+
+:root {
+    --cor1: black;
+    --cor2: grey;
+    --cor3: purple;
+}

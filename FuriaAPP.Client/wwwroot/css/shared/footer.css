@@ -1,0 +1,19 @@
+@import url(../style.css);
+
+.footer-fixed {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 150px;
+    background: var(--cor2);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 100;
+}
+
+.footer-logo {
+    height: 180px;
+    width: auto;
+}

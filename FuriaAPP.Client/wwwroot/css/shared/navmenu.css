@@ -1,0 +1,45 @@
+@import url(../style.css);
+
+.topnav {
+    display: flex;
+    background: var(--cor2);
+    padding: 1rem;
+    width: 100%;
+}
+
+.topnav > div {  
+    display: flex;
+    width: 100%; 
+}
+
+.topnav nav {
+    display: flex;
+    gap: 1rem;
+    width: 100%;
+    align-items: center;
+}
+
+.logout-container {
+    margin-left: auto;
+    display: flex;
+    padding-right: 50px;
+}
+
+.topnav button {
+    background: none;
+    border: none;
+    padding: 0;
+    cursor: pointer;
+}
+
+.nav-button {
+    padding: 0.5rem 1rem;
+    background: var(--cor1);
+    color: white;
+    border-radius: 4px;
+    display: inline-block;
+}
+
+.nav-button:hover {
+    background: var(--cor3);
+}
