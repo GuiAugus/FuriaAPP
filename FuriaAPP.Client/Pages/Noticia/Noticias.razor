@@ -8,6 +8,8 @@
 @inject NavigationManager NavigationManager
 @inject AuthenticationStateProvider AuthStateProvider
 
+<PageTitle>Noticias</PageTitle>
+
 <div class="noticias-container">
     <h1 class="titulo-principal">Notícias de E-Sports</h1>
 
@@ -89,15 +91,11 @@
             
             if (user.Identity?.IsAuthenticated ?? false)
             {
-                var userId = user.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+                var jogosInteresseClaim = user.FindFirst("jogos_interesse")?.Value;
                 
-                var httpClient = HttpClientFactory.CreateClient("ServerAPI");
-                var response = await httpClient.GetAsync($"api/usuario/{userId}");
-                
-                if (response.IsSuccessStatusCode)
+                if (!string.IsNullOrEmpty(jogosInteresseClaim))
                 {
-                    var usuario = await response.Content.ReadFromJsonAsync<UsuarioDto>();
-                    jogosInteresse = usuario?.JogoDeInteresse ?? new();
+                    jogosInteresse = JsonSerializer.Deserialize<List<UsuarioJogoInteresseDto>>(jogosInteresseClaim) ?? new();
                 }
             }
         }
@@ -118,21 +116,26 @@
             {
                 var todasNoticias = await response.Content.ReadFromJsonAsync<List<NoticiaDto>>();
                 
-                noticias = todasNoticias?
-                    .OrderByDescending(n => n.DataPublicacao)
-                    .ToList() ?? new();
-                
-                Console.WriteLine($"Notícias carregadas: {noticias.Count}");
-            }
-            else
-            {
-                Console.WriteLine($"Erro na API: {response.StatusCode}");
-                noticias = new List<NoticiaDto>();
+                if (jogosInteresse.Any())
+                {
+                    noticias = todasNoticias?
+                        .OrderByDescending(n => n.DataPublicacao)
+                        .ToList() ?? new();
+                }
+                else
+                {
+                    var idsJogosInteresse = jogosInteresse.Select(j => j.JogoId).ToList();
+                    
+                    noticias = todasNoticias?
+                        .Where(n => n.JogoId.HasValue && idsJogosInteresse.Contains(n.JogoId.Value))
+                        .OrderByDescending(n => n.DataPublicacao)
+                        .ToList() ?? new();
+                }
             }
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"Erro ao carregar notícias: {ex.ToString()}");
+            Console.WriteLine($"Erro ao carregar notícias: {ex}");
             noticias = new List<NoticiaDto>();
         }
     }

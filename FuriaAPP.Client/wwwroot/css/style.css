@@ -20,24 +20,54 @@
     --cor3: #5a5a5a;
 }
 
+/* ========== REGRAS GERAIS PARA EVITAR ROLAGEM HORIZONTAL ========== */
+html, body {
+    width: 100%;
+    overflow-x: hidden;
+    margin: 0;
+    padding: 0;
+}
+
 body {
     font-family: var(--fonte-texto);
     font-size: var(--fonte-base);
     line-height: 1.6;
     color: #333;
+    position: relative;
+    min-height: 100vh;
+    box-sizing: border-box;
 }
 
+*,
+*::before,
+*::after {
+    box-sizing: inherit;
+}
+
+img, video, iframe, table {
+    max-width: 100%;
+    height: auto;
+}
+
+/* ========== TIPOGRAFIA ========== */
 h1, h2, h3, h4, h5, h6 {
     font-family: var(--fonte-titulo);
     font-weight: 700;
     line-height: 1.2;
     margin-bottom: 1rem;
+    word-wrap: break-word;
 }
 
 code, pre {
     font-family: var(--fonte-codigo);
+    overflow-x: auto;
+    display: block;
+    padding: 1rem;
+    background-color: #f5f5f5;
+    border-radius: 4px;
 }
 
+/* ========== LOADING ========== */
 .loading-container {
     position: fixed;
     top: 0;
@@ -81,6 +111,7 @@ code, pre {
     animation: pulse 1.5s ease-in-out infinite;
 }
 
+/* ========== ANIMAÇÕES ========== */
 @keyframes rotate {
     100% {
         transform: rotate(360deg);

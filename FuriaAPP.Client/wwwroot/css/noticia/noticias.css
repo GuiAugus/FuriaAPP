@@ -1,7 +1,7 @@
 @import url(../style.css);
 
 :root {
-    --cor-texto-claro: #6c757d; /* Cor do texto secundário */
+    --cor-texto-claro: #6c757d; 
 }
 
 .noticias-container {
