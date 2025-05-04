@@ -1,0 +1,145 @@
+@import url(../style.css);
+
+.NoticiasDetalhes-Container {    
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 20px;
+}
+
+.NoticiasDetalhes-carregando {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 200px;
+}
+
+.NoticiasDetalhes-spinner {
+    width: 3rem;
+    height: 3rem;
+    border: 0.25rem solid var(--cor2);
+    border-right-color: transparent;
+    border-radius: 50%;
+    animation: NoticiasDetalhes-spin 1s linear infinite;
+}
+
+@keyframes NoticiasDetalhes-spin {
+    to { transform: rotate(360deg); }
+}
+
+.NoticiasDetalhes-textoOculto {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+}
+
+.NoticiasDetalhes-conteudo {
+    margin-top: 2rem;
+}
+
+.NoticiasDetalhes-botaoVoltar {
+    background-color: transparent;
+    color: var(--cor1);
+    border: 1px solid var(--cor1);
+    padding: 0.5rem 1rem;
+    border-radius: 4px;
+    margin-bottom: 1.5rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.NoticiasDetalhes-botaoVoltar:hover {
+    background-color: var(--cor1);
+    color: white;
+}
+
+.NoticiasDetalhes-artigo {
+    background-color: white;
+    border-radius: 8px;
+    padding: 2rem;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.NoticiasDetalhes-cabecalho {
+    margin-bottom: 2rem;
+    padding-bottom: 1rem;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+.NoticiasDetalhes-titulo {
+    color: var(--cor1);
+    font-size: 2rem;
+    margin-bottom: 1rem;
+}
+
+.NoticiasDetalhes-metadados {
+    color: #6c757d;
+    margin-bottom: 1rem;
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+}
+
+.NoticiasDetalhes-badge {
+    padding: 0.25rem 0.5rem;
+    border-radius: 4px;
+    font-size: 0.875rem;
+    font-weight: 500;
+}
+
+.NoticiasDetalhes-badgeJogo {
+    background-color: var(--cor2);
+    color: white;
+}
+
+.NoticiasDetalhes-badgeSecundario {
+    background-color: #6c757d;
+    color: white;
+}
+
+.NoticiasDetalhes-badgeCampeonato {
+    background-color: #17a2b8;
+    color: white;
+}
+
+.NoticiasDetalhes-corpo {
+    color: #495057;
+    line-height: 1.8;
+    margin-bottom: 2rem;
+}
+
+.NoticiasDetalhes-corpo br {
+    content: "";
+    display: block;
+    margin-bottom: 1rem;
+}
+
+.NoticiasDetalhes-infoPartida {
+    background-color: var(--cor3);
+    border-radius: 6px;
+    padding: 1rem;
+    margin-top: 2rem;
+}
+
+.NoticiasDetalhes-subtitulo {
+    color: var(--cor1);
+    font-size: 1.25rem;
+    margin: 0;
+}
+
+/* Responsividade */
+@media (max-width: 768px) {
+    .NoticiasDetalhes-artigo {
+        padding: 1.5rem;
+    }
+    
+    .NoticiasDetalhes-titulo {
+        font-size: 1.75rem;
+    }
+}

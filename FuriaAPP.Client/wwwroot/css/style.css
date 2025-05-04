@@ -3,9 +3,110 @@
 @import url(shared/footer.css);
 @import url(auth/login.css);
 @import url(auth/cadastro.css);
+@import url(noticia/noticias.css);
+@import url(noticia/noticiasDetalhes.css);
 
 :root {
-    --cor1: black;
-    --cor2: grey;
-    --cor3: purple;
+    --fonte-titulo: 'Barlow', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    --fonte-texto: 'Inter', 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+    --fonte-codigo: 'Fira Code', 'Courier New', Courier, monospace;
+    
+    --fonte-base: 1rem;
+    --fonte-pequena: 0.875rem;
+    --fonte-grande: 1.25rem;
+
+    --cor1: #000;
+    --cor2: #7e7e7e;
+    --cor3: #5a5a5a;
+}
+
+body {
+    font-family: var(--fonte-texto);
+    font-size: var(--fonte-base);
+    line-height: 1.6;
+    color: #333;
+}
+
+h1, h2, h3, h4, h5, h6 {
+    font-family: var(--fonte-titulo);
+    font-weight: 700;
+    line-height: 1.2;
+    margin-bottom: 1rem;
+}
+
+code, pre {
+    font-family: var(--fonte-codigo);
+}
+
+.loading-container {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    background-color: rgba(255, 255, 255, 0.9);
+    z-index: 1000;
+}
+
+.loading-spinner {
+    width: 100px;
+    height: 100px;
+    animation: rotate 2s linear infinite;
+}
+
+.loading-background {
+    fill: none;
+    stroke: #f0f0f0;
+    stroke-width: 8;
+}
+
+.loading-progress {
+    fill: none;
+    stroke: var(--cor1);
+    stroke-width: 8;
+    stroke-linecap: round;
+    stroke-dasharray: 283;
+    stroke-dashoffset: 280;
+    animation: dash 1.5s ease-in-out infinite;
+}
+
+.loading-text {
+    margin-top: 20px;
+    font-size: 1.2rem;
+    color: #2a3042;
+    animation: pulse 1.5s ease-in-out infinite;
+}
+
+@keyframes rotate {
+    100% {
+        transform: rotate(360deg);
+    }
+}
+
+@keyframes dash {
+    0% {
+        stroke-dashoffset: 280;
+        transform: rotate(0deg);
+    }
+    50% {
+        stroke-dashoffset: 70;
+        transform: rotate(180deg);
+    }
+    100% {
+        stroke-dashoffset: 280;
+        transform: rotate(360deg);
+    }
+}
+
+@keyframes pulse {
+    0%, 100% {
+        opacity: 0.6;
+    }
+    50% {
+        opacity: 1;
+    }
 }

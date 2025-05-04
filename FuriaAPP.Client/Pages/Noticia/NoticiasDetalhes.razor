@@ -8,62 +8,47 @@
 @inject NavigationManager NavigationManager
 @inject AuthenticationStateProvider AuthStateProvider
 
-@if (noticia == null)
-{
-    <div class="text-center">
-        <div class="spinner-border text-primary" role="status">
-            <span class="visually-hidden">Carregando...</span>
-        </div>
-    </div>
-}
-else
-{
-    <div class="container mt-4">
-        <button @onclick="VoltarParaNoticias" class="btn btn-outline-secondary mb-3">
-            &larr; Voltar para notícias
-        </button>
-        
-        <article class="noticia-detalhe">
-            <header class="mb-4">
-                <h1>@noticia.Titulo</h1>
-                <div class="text-muted mb-3">
-                    Publicado em: @noticia.DataPublicacao.ToString("dd/MM/yyyy HH:mm")
-                    @if (noticia.JogoId.HasValue && jogosInteresse.Any(j => j.JogoId == noticia.JogoId.Value))
-                    {
-                        <span class="badge bg-primary ms-2">
-                            @jogosInteresse.First(j => j.JogoId == noticia.JogoId.Value).NomeJogo
-                        </span>
-                    }
-                    else if (noticia.JogoId.HasValue)
-                    {
-                        <span class="badge bg-secondary ms-2">Jogo ID: @noticia.JogoId</span>
-                    }
-                </div>
-                @if (noticia.CampeonatoId.HasValue)
-                {
-                    <div>
-                        <span class="badge bg-info">Campeonato ID: @noticia.CampeonatoId</span>
-                    </div>
-                }
-            </header>
-            
-            <div class="noticia-conteudo mb-4">
-                @if (!string.IsNullOrEmpty(noticia.Conteudo))
-                {
-                    var conteudoComQuebras = noticia.Conteudo.Replace("\n", "<br />");
-                    @((MarkupString)conteudoComQuebras)
-                }
+<div class="NoticiasDetalhes-Container">
+    @if (noticia == null)
+    {
+        <div class="NoticiasDetalhes-carregando">
+            <div class="NoticiasDetalhes-spinner" role="status">
+                <span class="NoticiasDetalhes-textoOculto">Carregando...</span>
             </div>
+        </div>
+    }
+    else
+    {
+        <div class="NoticiasDetalhes-conteudo">
+            <button @onclick="VoltarParaNoticias" class="NoticiasDetalhes-botaoVoltar">
+                &larr; Voltar para notícias
+            </button>
             
-            @if (noticia.JogoHistoricoId.HasValue)
-            {
-                <div class="mt-4 p-3 bg-light rounded">
-                    <h5>ID da Partida: @noticia.JogoHistoricoId</h5>
+            <article class="NoticiasDetalhes-artigo">
+                <header class="NoticiasDetalhes-cabecalho">
+                    <h1 class="NoticiasDetalhes-titulo">@noticia.Titulo</h1>
+                    <div class="NoticiasDetalhes-metadados">
+                        Publicado em: @noticia.DataPublicacao.ToString("dd/MM/yyyy HH:mm")
+                        @if (noticia.JogoId.HasValue && jogosInteresse.Any(j => j.JogoId == noticia.JogoId.Value))
+                        {
+                            <span class="NoticiasDetalhes-badge NoticiasDetalhes-badgeJogo">
+                                @jogosInteresse.First(j => j.JogoId == noticia.JogoId.Value).NomeJogo
+                            </span>
+                        }
+                    </div>
+                </header>
+                
+                <div class="NoticiasDetalhes-corpo">
+                    @if (!string.IsNullOrEmpty(noticia.Conteudo))
+                    {
+                        var conteudoComQuebras = noticia.Conteudo.Replace("\n", "<br />");
+                        @((MarkupString)conteudoComQuebras)
+                    }
                 </div>
-            }
-        </article>
-    </div>
-}
+            </article>
+        </div>
+    }
+</div>
 
 @code {
     [Parameter]

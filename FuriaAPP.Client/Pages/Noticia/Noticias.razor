@@ -8,62 +8,61 @@
 @inject NavigationManager NavigationManager
 @inject AuthenticationStateProvider AuthStateProvider
 
-<h1 class="mb-4">Notícias de E-Sports</h1>
+<div class="noticias-container">
+    <h1 class="titulo-principal">Notícias de E-Sports</h1>
 
-@if (noticias == null)
-{
-    <div class="text-center">
-        <div class="spinner-border text-primary" role="status">
-            <span class="visually-hidden">Carregando...</span>
+    @if (noticias == null)
+    {
+        <div class="carregando-container">
+            <div class="spinner-carregando" role="status">
+                <span class="texto-oculto">Carregando...</span>
+            </div>
         </div>
-    </div>
-}
-else if (!noticias.Any())
-{
-    <div class="alert alert-info">
-        Nenhuma notícia disponível para seus jogos de interesse. <br>
-        @if (jogosInteresse.Any())
-        {
-            <span>Jogos de interesse: @string.Join(", ", jogosInteresse.Select(j => j.NomeJogo))</span>
-        }
-        else
-        {
-            <span>Você não tem jogos de interesse configurados</span>
-        }
-    </div>
-}
-else
-{
-    <div class="row">
-        @foreach (var noticia in noticias)
-        {
-            <div class="col-md-6 mb-4">
-                <div class="card h-100">
-                    <div class="card-body">
-                        <a href="/noticia/@noticia.Id" class="text-decoration-none">
-                            <h5 class="card-title text-primary">@noticia.Titulo</h5>
-                        </a>
-                        <h6 class="card-subtitle mb-2 text-muted">
-                            @noticia.DataPublicacao.ToString("dd/MM/yyyy HH:mm")
-                            @if (noticia.JogoId.HasValue)
-                            {
-                                <span class="badge bg-primary ms-2">
-                                    @noticia.NomeJogo
-                                </span>
-                            }
-                        </h6>
-                        <p class="card-text">
-                            @(noticia.Conteudo?.Length > 100 ? noticia.Conteudo.Substring(0, 100) + "..." : noticia.Conteudo)
-                        </p>
-                        <a href="/noticia/@noticia.Id" class="btn btn-primary">
-                            Ler mais
-                        </a>
+    }
+    else if (!noticias.Any())
+    {
+        <div class="alertas-sem-noticias">
+            Nenhuma notícia disponível para seus jogos de interesse. <br>
+            @if (jogosInteresse.Any())
+            {
+                <span>Jogos de interesse: @string.Join(", ", jogosInteresse.Select(j => j.NomeJogo))</span>
+            }
+            else
+            {
+                <span>Você não tem jogos de interesse configurados</span>
+            }
+        </div>
+    }
+    else
+    {
+        <div class="grid-noticias">
+            @foreach (var noticia in noticias)
+            {
+                <div class="coluna-noticia">
+                    <div class="card-noticia">
+                        <div class="corpo-card">
+                            <a href="/noticia/@noticia.Id" class="link-titulo">
+                                <h5 class="titulo-noticia">@noticia.Titulo</h5>
+                            </a>
+                            <h6 class="subtitulo-noticia">
+                                @noticia.DataPublicacao.ToString("dd/MM/yyyy HH:mm")
+                                @if (noticia.JogoId.HasValue)
+                                {
+                                    <span class="badge-jogo">
+                                        @noticia.NomeJogo
+                                    </span>
+                                }
+                            </h6>
+                            <p class="resumo-noticia">
+                                @(noticia.Conteudo?.Length > 100 ? noticia.Conteudo.Substring(0, 100) + "..." : noticia.Conteudo)
+                            </p>
+                        </div>
                     </div>
                 </div>
-            </div>
-        }
-    </div>
-}
+            }
+        </div>
+    }
+</div>
 
 @code {
     private List<NoticiaDto>? noticias;
